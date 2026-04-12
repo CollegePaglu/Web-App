@@ -1,306 +1,85 @@
 /**
- * Secure Storage Utilities
- * 
- * Wrapper around expo-secure-store for token and user data management.
- * Provides type-safe access to sensitive data.
+ * Storage Utilities (Web/Next.js)
+ *
+ * Replaces expo-secure-store with localStorage.
+ * All helpers are synchronous or async-compatible.
  */
 
-import * as SecureStore from 'expo-secure-store';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEYS } from '@/config/constants';
-import { User, Tokens } from '@/api/types';
-import { env } from '@/config/env';
+const KEYS = {
+  ACCESS_TOKEN: 'cp_access_token',
+  REFRESH_TOKEN: 'cp_refresh_token',
+  USER: 'cp_user',
+  LAST_ACTIVE: 'cp_last_active',
+} as const;
 
-// ============================================
-// Secure Storage (for sensitive data)
-// ============================================
+const isBrowser = () => typeof window !== 'undefined';
 
-export const secureStorage = {
-  /**
-   * Get an item from secure storage
-   */
-  async get(key: string): Promise<string | null> {
-    try {
-      return await SecureStore.getItemAsync(key);
-    } catch (error) {
-      console.error(`Error reading from secure storage [${key}]:`, error);
-      return null;
-    }
-  },
-
-  /**
-   * Set an item in secure storage
-   */
-  async set(key: string, value: string): Promise<boolean> {
-    try {
-      await SecureStore.setItemAsync(key, value);
-      return true;
-    } catch (error) {
-      console.error(`Error writing to secure storage [${key}]:`, error);
-      return false;
-    }
-  },
-
-  /**
-   * Delete an item from secure storage
-   */
-  async delete(key: string): Promise<boolean> {
-    try {
-      await SecureStore.deleteItemAsync(key);
-      return true;
-    } catch (error) {
-      console.error(`Error deleting from secure storage [${key}]:`, error);
-      return false;
-    }
-  },
-};
-
-// ============================================
-// Token Storage
-// ============================================
+// ─── Token Storage ────────────────────────────────────────────────────────────
 
 export const tokenStorage = {
-  /**
-   * Get access token
-   */
   async getAccessToken(): Promise<string | null> {
-    const token = await secureStorage.get(STORAGE_KEYS.ACCESS_TOKEN);
-    if (env.ENABLE_DEBUG_LOGS && token) {
-      console.log('🔐 Access token retrieved');
-    }
-    return token;
+    if (!isBrowser()) return null;
+    return localStorage.getItem(KEYS.ACCESS_TOKEN);
   },
-
-  /**
-   * Set access token
-   */
-  async setAccessToken(token: string): Promise<boolean> {
-    const success = await secureStorage.set(STORAGE_KEYS.ACCESS_TOKEN, token);
-    if (env.ENABLE_DEBUG_LOGS && success) {
-      console.log('🔐 Access token stored');
-    }
-    return success;
-  },
-
-  /**
-   * Get refresh token
-   */
   async getRefreshToken(): Promise<string | null> {
-    return secureStorage.get(STORAGE_KEYS.REFRESH_TOKEN);
+    if (!isBrowser()) return null;
+    return localStorage.getItem(KEYS.REFRESH_TOKEN);
   },
-
-  /**
-   * Set refresh token
-   */
-  async setRefreshToken(token: string): Promise<boolean> {
-    return secureStorage.set(STORAGE_KEYS.REFRESH_TOKEN, token);
+  async setTokens({ accessToken, refreshToken }: { accessToken: string; refreshToken: string }) {
+    if (!isBrowser()) return;
+    localStorage.setItem(KEYS.ACCESS_TOKEN, accessToken);
+    localStorage.setItem(KEYS.REFRESH_TOKEN, refreshToken);
   },
-
-  /**
-   * Set both tokens at once
-   */
-  async setTokens(tokens: Tokens): Promise<boolean> {
-    try {
-      await Promise.all([
-        this.setAccessToken(tokens.accessToken),
-        this.setRefreshToken(tokens.refreshToken),
-      ]);
-
-      // Verify tokens were stored
-      const [storedAccess, storedRefresh] = await Promise.all([
-        this.getAccessToken(),
-        this.getRefreshToken(),
-      ]);
-
-      if (!storedAccess || !storedRefresh) {
-        throw new Error('Token verification failed');
-      }
-
-      if (env.ENABLE_DEBUG_LOGS) {
-        console.log('✅ Tokens stored and verified');
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error storing tokens:', error);
-      return false;
-    }
+  async setAccessToken(token: string) {
+    if (!isBrowser()) return;
+    localStorage.setItem(KEYS.ACCESS_TOKEN, token);
   },
-
-  /**
-   * Clear all tokens
-   */
-  async clearTokens(): Promise<void> {
-    await Promise.all([
-      secureStorage.delete(STORAGE_KEYS.ACCESS_TOKEN),
-      secureStorage.delete(STORAGE_KEYS.REFRESH_TOKEN),
-    ]);
-    if (env.ENABLE_DEBUG_LOGS) {
-      console.log('🗑️ Tokens cleared');
-    }
+  async setRefreshToken(token: string) {
+    if (!isBrowser()) return;
+    localStorage.setItem(KEYS.REFRESH_TOKEN, token);
   },
-
-  /**
-   * Clear all auth-related data
-   */
-  async clearAll(): Promise<void> {
-    await Promise.all([
-      this.clearTokens(),
-      userStorage.clearUser(),
-    ]);
-    if (env.ENABLE_DEBUG_LOGS) {
-      console.log('🗑️ All auth data cleared');
-    }
+  async clearAll() {
+    if (!isBrowser()) return;
+    localStorage.removeItem(KEYS.ACCESS_TOKEN);
+    localStorage.removeItem(KEYS.REFRESH_TOKEN);
+    localStorage.removeItem(KEYS.USER);
+    localStorage.removeItem(KEYS.LAST_ACTIVE);
   },
 };
 
-// ============================================
-// User Storage
-// ============================================
+// ─── User Storage ─────────────────────────────────────────────────────────────
 
 export const userStorage = {
-  /**
-   * Get stored user data
-   */
-  async getUser(): Promise<User | null> {
+  async getUser<T = unknown>(): Promise<T | null> {
+    if (!isBrowser()) return null;
+    const raw = localStorage.getItem(KEYS.USER);
+    if (!raw) return null;
     try {
-      const json = await secureStorage.get(STORAGE_KEYS.USER_DATA);
-      return json ? JSON.parse(json) : null;
-    } catch (error) {
-      console.error('Error parsing user data:', error);
+      return JSON.parse(raw) as T;
+    } catch {
       return null;
     }
   },
-
-  /**
-   * Store user data
-   */
-  async setUser(user: User): Promise<boolean> {
-    try {
-      return await secureStorage.set(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
-    } catch (error) {
-      console.error('Error storing user data:', error);
-      return false;
-    }
-  },
-
-  /**
-   * Clear user data
-   */
-  async clearUser(): Promise<void> {
-    await secureStorage.delete(STORAGE_KEYS.USER_DATA);
+  async setUser<T>(user: T) {
+    if (!isBrowser()) return;
+    localStorage.setItem(KEYS.USER, JSON.stringify(user));
   },
 };
 
-// ============================================
-// Last Active Timestamp Storage
-// ============================================
+// ─── Last Active ──────────────────────────────────────────────────────────────
 
 export const lastActiveStorage = {
-  /**
-   * Get the last active timestamp
-   */
   async get(): Promise<number | null> {
-    try {
-      const value = await AsyncStorage.getItem(STORAGE_KEYS.LAST_ACTIVE_TIMESTAMP);
-      return value ? parseInt(value, 10) : null;
-    } catch (error) {
-      console.error('Error reading last active timestamp:', error);
-      return null;
-    }
+    if (!isBrowser()) return null;
+    const raw = localStorage.getItem(KEYS.LAST_ACTIVE);
+    return raw ? Number(raw) : null;
   },
-
-  /**
-   * Set the last active timestamp to now
-   */
-  async set(): Promise<boolean> {
-    try {
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.LAST_ACTIVE_TIMESTAMP,
-        Date.now().toString()
-      );
-      return true;
-    } catch (error) {
-      console.error('Error writing last active timestamp:', error);
-      return false;
-    }
+  set() {
+    if (!isBrowser()) return;
+    localStorage.setItem(KEYS.LAST_ACTIVE, String(Date.now()));
   },
-
-  /**
-   * Clear the last active timestamp
-   */
-  async clear(): Promise<boolean> {
-    try {
-      await AsyncStorage.removeItem(STORAGE_KEYS.LAST_ACTIVE_TIMESTAMP);
-      return true;
-    } catch (error) {
-      console.error('Error clearing last active timestamp:', error);
-      return false;
-    }
+  async clear() {
+    if (!isBrowser()) return;
+    localStorage.removeItem(KEYS.LAST_ACTIVE);
   },
-};
-
-// ============================================
-// General Storage (for non-sensitive data)
-// ============================================
-
-export const storage = {
-  /**
-   * Get an item from async storage
-   */
-  async get<T>(key: string): Promise<T | null> {
-    try {
-      const value = await AsyncStorage.getItem(key);
-      return value ? JSON.parse(value) : null;
-    } catch (error) {
-      console.error(`Error reading from storage [${key}]:`, error);
-      return null;
-    }
-  },
-
-  /**
-   * Set an item in async storage
-   */
-  async set<T>(key: string, value: T): Promise<boolean> {
-    try {
-      await AsyncStorage.setItem(key, JSON.stringify(value));
-      return true;
-    } catch (error) {
-      console.error(`Error writing to storage [${key}]:`, error);
-      return false;
-    }
-  },
-
-  /**
-   * Delete an item from async storage
-   */
-  async delete(key: string): Promise<boolean> {
-    try {
-      await AsyncStorage.removeItem(key);
-      return true;
-    } catch (error) {
-      console.error(`Error deleting from storage [${key}]:`, error);
-      return false;
-    }
-  },
-
-  /**
-   * Clear all app storage
-   */
-  async clear(): Promise<boolean> {
-    try {
-      await AsyncStorage.clear();
-      return true;
-    } catch (error) {
-      console.error('Error clearing storage:', error);
-      return false;
-    }
-  },
-};
-
-export default {
-  secure: secureStorage,
-  token: tokenStorage,
-  user: userStorage,
-  general: storage,
 };

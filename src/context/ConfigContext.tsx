@@ -1,6 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+'use client';
+
+import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
 import apiClient from '@/api/client';
 import { API_ENDPOINTS } from '@/api/endpoints';
+import { useAuthStore } from '@/features/auth';
 
 interface Features {
   lazyPeepsEnabled: boolean;
@@ -28,10 +31,6 @@ interface ConfigProviderProps {
   children: React.ReactNode;
 }
 
-import { useAuthStore } from '@/features/auth';
-
-// ...
-
 export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
   const [features, setFeatures] = useState<Features>({
@@ -40,11 +39,11 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   });
   const [loading, setLoading] = useState(true);
 
-  const fetchConfig = async () => {
+  const fetchConfig = useCallback(async () => {
     try {
       const response = await apiClient.get(API_ENDPOINTS.CONFIG.PUBLIC);
       const data = response.data?.data || {};
-      
+
       // Map API keys to internal feature flags
       setFeatures({
         lazyPeepsEnabled: !!data.feature_lazypeeps_enabled,
@@ -57,18 +56,14 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchConfig();
-  }, [isAuthenticated]);
-
-  const refreshConfig = async () => {
-    await fetchConfig();
-  };
+  }, [fetchConfig, isAuthenticated]);
 
   return (
-    <ConfigContext.Provider value={{ features, loading, refreshConfig }}>
+    <ConfigContext.Provider value={{ features, loading, refreshConfig: fetchConfig }}>
       {children}
     </ConfigContext.Provider>
   );

@@ -1,100 +1,50 @@
 /**
- * Environment Configuration
+ * Environment Configuration (Next.js)
  * 
- * Centralized environment variable management with type safety.
- * Supports development, staging, and production environments.
+ * Uses NEXT_PUBLIC_* variables. All values are read at build time by Next.js.
  */
 
-import { Platform } from 'react-native';
-import Constants from 'expo-constants';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.collegepaglu.com/api/v1';
 
-// Environment detection
-const ENV = (process.env.NODE_ENV || 'development') as string;
-const IS_PRODUCTION = ENV === 'production';
-const IS_DEVELOPMENT = ENV === 'development';
+const CDN_URL = (
+  process.env.NEXT_PUBLIC_CDN_URL || 'https://cdn.collegepaglu.com'
+).replace(/\/+$/, '');
 
-/**
- * Expo/RN often bundles with NODE_ENV=production while you are still on a dev client (__DEV__=true).
- * Without this, API_BASE_URL falls through to production URLs and you keep seeing prod feed.
- */
-const IS_EXPO_DEV_CLIENT = typeof __DEV__ !== 'undefined' && __DEV__;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 
-const urlProfile: keyof typeof API_URLS = IS_EXPO_DEV_CLIENT
-  ? 'development'
-  : ENV === 'staging'
-    ? 'staging'
-    : ENV === 'production'
-      ? 'production'
-      : 'development';
-
-// API URLs per environment (development → LAN backend; override anytime with EXPO_PUBLIC_API_BASE_URL)
-const API_URLS = {
-  development: `https://api.collegepaglu.com/api/v1`,
-  staging: `https://api.collegepaglu.com/api/v1`,
-  production: `https://api.collegepaglu.com/api/v1`,
-} as const;
-
-// Public CDN for R2 object keys (development must match Backend R2_PUBLIC_URL / CDN_URL)
-const R2_URLS = {
-  development: 'https://cdn.collegepaglu.com',
-  staging: 'https://cdn.collegepaglu.com',
-  production: 'https://cdn.collegepaglu.com',
-} as const;
-
-/** Expo injects EXPO_PUBLIC_* at bundle time when set in .env */
-const expoApiBase = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
-const expoR2Base = process.env.EXPO_PUBLIC_R2_PUBLIC_URL?.trim();
-
-/**
- * Application Environment Configuration
- */
 export const env = {
-  // Environment flags
-  NODE_ENV: ENV as 'development' | 'staging' | 'production',
+  NODE_ENV: (process.env.NODE_ENV || 'development') as 'development' | 'staging' | 'production',
   IS_PRODUCTION,
   IS_DEVELOPMENT,
-  IS_STAGING: ENV === 'staging',
+  IS_STAGING: false,
 
-  API_BASE_URL: expoApiBase || API_URLS[urlProfile] || API_URLS.development,
-  R2_PUBLIC_URL: (expoR2Base || R2_URLS[urlProfile] || R2_URLS.development).replace(
-    /\/+$/,
-    ''
-  ),
+  API_BASE_URL,
+  R2_PUBLIC_URL: CDN_URL,
 
-  // Timeouts (in milliseconds)
-  API_TIMEOUT: IS_PRODUCTION && !IS_EXPO_DEV_CLIENT ? 15000 : 20000,
-  UPLOAD_TIMEOUT: 90000, // 90s for uploads
+  // Timeouts
+  API_TIMEOUT: IS_PRODUCTION ? 15000 : 20000,
+  UPLOAD_TIMEOUT: 90000,
 
-  // Retry configuration
-  MAX_RETRIES: 2,  // Allow 2 retries on timeout
-  RETRY_DELAY_MS: 500,  // 500ms delay between retries
+  // Retry
+  MAX_RETRIES: 2,
+  RETRY_DELAY_MS: 500,
 
-  // Feature flags (__DEV__ keeps logs on even when NODE_ENV is production in the bundle)
-  ENABLE_DEBUG_LOGS: IS_EXPO_DEV_CLIENT || !IS_PRODUCTION,
-  ENABLE_API_LOGS: IS_EXPO_DEV_CLIENT || !IS_PRODUCTION,
-  ENABLE_PERFORMANCE_MONITORING: IS_PRODUCTION && !IS_EXPO_DEV_CLIENT,
+  // Feature flags
+  ENABLE_DEBUG_LOGS: IS_DEVELOPMENT,
+  ENABLE_API_LOGS: IS_DEVELOPMENT,
+  ENABLE_PERFORMANCE_MONITORING: IS_PRODUCTION,
 
-  // Platform info
-  PLATFORM: Platform.OS,
-  IS_ANDROID: Platform.OS === 'android',
-  IS_IOS: Platform.OS === 'ios',
-  IS_WEB: Platform.OS === 'web',
+  // Platform
+  PLATFORM: 'web' as const,
+  IS_ANDROID: false,
+  IS_IOS: false,
+  IS_WEB: true,
 
-  // App info from Expo Constants
-  APP_NAME: Constants.expoConfig?.name || 'AppV1',
-  APP_VERSION: Constants.expoConfig?.version || '1.0.0',
-  APP_SCHEME: Constants.expoConfig?.scheme || 'appv1',
+  APP_NAME: 'CollegePaglu',
+  APP_VERSION: '2.0.0',
+  APP_SCHEME: 'collegepaglu',
 } as const;
-
-/**
- * Development logging
- */
-if (env.ENABLE_DEBUG_LOGS) {
-  console.log('🔧 Environment Configuration:');
-  console.log(`   NODE_ENV (bundle): ${env.NODE_ENV}`);
-  console.log(`   Dev client (__DEV__): ${IS_EXPO_DEV_CLIENT}`);
-  console.log(`   API URL: ${env.API_BASE_URL}`);
-  console.log(`   Platform: ${env.PLATFORM}`);
-}
 
 export default env;

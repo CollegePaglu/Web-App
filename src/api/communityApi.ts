@@ -9,8 +9,6 @@ import apiClient from './client';
 import { API_ENDPOINTS } from './endpoints';
 import { tokenStorage } from '@/utils/storage';
 import { env } from '@/config/env';
-import * as ImageManipulator from 'expo-image-manipulator';
-
 // ============================================
 // Types
 // ============================================
@@ -104,66 +102,19 @@ export interface CreateStoryData {
 // ============================================
 
 /**
- * Compress and resize images before upload for optimal display
- * Max width: 1200px, Quality: 80%
- * This prevents layout shifts and white borders when images are displayed
+ * Standard web compression placeholder.
+ * A more robust client-side compression could be added here (e.g. browser-image-compression).
  */
-const compressImage = async (
-    file: { uri: string; type: string; name: string }
-): Promise<{ uri: string; type: string; name: string }> => {
-    try {
-        // Skip non-image files
-        if (!file.type.startsWith('image/')) {
-            return file;
-        }
-
-        console.log(`🖼️ Compressing image: ${file.name}`);
-
-        // Resize image to max 1200px width, maintaining aspect ratio
-        // Quality: 80% for good balance between quality and file size
-        const manipulationResult = await ImageManipulator.manipulateAsync(
-            file.uri,
-            [
-                {
-                    resize: {
-                        width: 1200,
-                        height: undefined, // Maintain aspect ratio
-                    },
-                },
-            ],
-            {
-                compress: 0.8, // 0.8 = 80% quality
-                format: ImageManipulator.SaveFormat.JPEG,
-            }
-        );
-
-        const compressedFile = {
-            uri: manipulationResult.uri,
-            type: 'image/jpeg',
-            name: file.name.replace(/\.[^.]+$/, '') + '_compressed.jpg',
-        };
-
-        console.log(`✅ Image compressed: ${file.name} → ${compressedFile.name}`);
-        return compressedFile;
-    } catch (error) {
-        console.error(`❌ Image compression failed for ${file.name}:`, error);
-        // Return original file if compression fails
-        return file;
-    }
+const compressImage = async (file: File): Promise<File> => {
+    // For now, we will just return the original file. Adding a compression lib is optional on web.
+    return file;
 };
 
 /**
  * Compress multiple images before upload
  */
-const compressImages = async (
-    files: { uri: string; type: string; name: string }[]
-): Promise<{ uri: string; type: string; name: string }[]> => {
-    console.log(`📦 Compressing ${files.length} images...`);
-    const compressedFiles = await Promise.all(
-        files.map(file => compressImage(file))
-    );
-    console.log(`✅ All images compressed and ready to upload`);
-    return compressedFiles;
+const compressImages = async (files: File[]): Promise<File[]> => {
+    return Promise.all(files.map(file => compressImage(file)));
 };
 
 // ============================================
@@ -256,8 +207,6 @@ export const getPosts = async (
     const response = await apiClient.get(API_ENDPOINTS.COMMUNITY.POSTS, { params });
     const { posts, pagination } = extractPaginatedData(response.data, page, limit);
 
-    if (__DEV__) console.log('Posts fetched:', posts.length);
-
     return {
         items: posts.map(transformPost),
         page: pagination.page || page,
@@ -278,8 +227,6 @@ export const getUpdates = async (
         params: { page, limit },
     });
     const { posts, pagination } = extractPaginatedData(response.data, page, limit);
-
-    if (__DEV__) console.log('Updates fetched:', posts.length);
 
     return {
         items: posts.map(transformPost),
@@ -344,34 +291,26 @@ export const getPostById = async (postId: string): Promise<Post> => {
  * Create a new community post with optional media files
  * Sends form-data for file uploads (multipart/form-data)
  * @param data - Post content and title
- * @param mediaFiles - React Native file objects with { uri, type, name }
+ * @param mediaFiles - Standard File objects
  */
 export const createPost = async (
     data: CreatePostData,
-    mediaFiles?: { uri: string; type: string; name: string }[]
+    mediaFiles?: File[]
 ): Promise<Post> => {
     // If files are provided, send as form-data
     if (mediaFiles && mediaFiles.length > 0) {
-        // Compress images before upload to prevent white borders and layout shifts
-        console.log('🔄 Starting image compression and upload...');
         const compressedFiles = await compressImages(mediaFiles);
 
         const formData = new FormData();
         formData.append('content', data.content);
         if (data.title) formData.append('title', data.title);
 
-        // Append compressed media files - React Native format
+        // Append compressed media files
         for (const file of compressedFiles) {
-            // React Native FormData expects objects with uri, type, and name
-            formData.append('media', {
-                uri: file.uri,
-                type: file.type,
-                name: file.name,
-            } as any);
+            formData.append('media', file);
         }
 
         console.log('📤 Sending FormData with', compressedFiles.length, 'compressed files (using fetch)');
-        if (__DEV__) console.log('Sending FormData with', mediaFiles.length, 'files');
 
         // USE FETCH INSTEAD OF AXIOS FOR MULTIPART
         // Axios has known issues with FormData in React Native
@@ -389,7 +328,6 @@ export const createPost = async (
         const responseData = await response.json();
 
         if (!response.ok) {
-            if (__DEV__) console.error('Upload failed:', response.status, responseData);
             // Construct an error object that mimics Axios error for frontend compatibility
             const error: any = new Error(responseData.message || 'Upload failed');
             error.response = {
@@ -554,7 +492,6 @@ export const getComments = async (
 
     // Transform backend response to frontend format
     const backendData = response.data.data;
-    if (__DEV__) console.log('Comments raw response:', backendData?.data?.length || 0);
 
     const comments = backendData?.data || backendData || [];
     const pagination = backendData?.pagination || {};
@@ -699,12 +636,11 @@ export const deleteComment = async (
  * Accepts multiple files (max 5 total)
  */
 export const uploadMedia = async (
-    files: { uri: string; type: string; name: string }[]
+    files: File[]
 ): Promise<{
     images: { url: string; key: string; thumbnailUrl: string }[];
     video?: { url: string; key: string };
 }> => {
-    // Delegate to native upload service for reliability
     return await MediaUploadService.uploadBatch(files);
 };
 

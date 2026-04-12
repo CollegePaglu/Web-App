@@ -99,6 +99,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         lastActiveStorage.set(),
       ]);
 
+      // Sync cookie so Next.js middleware can read auth state
+      if (typeof document !== 'undefined') {
+        document.cookie = `cp_access_token=${tokens.accessToken}; path=/; max-age=604800; samesite=lax`;
+      }
+
       set({
         isAuthenticated: true,
         tokens,
@@ -129,6 +134,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Clear storage
       await tokenStorage.clearAll();
 
+      // Clear middleware cookie
+      if (typeof document !== 'undefined') {
+        document.cookie = 'cp_access_token=; path=/; max-age=0; samesite=lax';
+      }
+
       set({
         isAuthenticated: false,
         tokens: null,
@@ -142,6 +152,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       console.error('Logout error:', error);
       // Still clear local state even if storage fails
+      if (typeof document !== 'undefined') {
+        document.cookie = 'cp_access_token=; path=/; max-age=0; samesite=lax';
+      }
       set({
         isAuthenticated: false,
         tokens: null,

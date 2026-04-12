@@ -1,3 +1,2 @@
 export { env, default } from './env';
-export * from './constants';
-export { theme } from './theme';
+export { SESSION_CONFIG } from './constants';
