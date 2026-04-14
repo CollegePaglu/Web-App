@@ -1,9 +1,4 @@
-import React from 'react'
-
-const signup = () => {
-  return (
-    <div>signup</div>
-  )
+import { redirect } from "next/navigation";
+export default function OldSignupRedirect() {
+  redirect("/login");
 }
-
-export default signup

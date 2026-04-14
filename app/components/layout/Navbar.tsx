@@ -1,80 +1,117 @@
 "use client";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useFeedStore } from "@/store/useFeedStore";
+import toast from "react-hot-toast";
+import { useTheme } from "@/app/context/ThemeContext";
 
 export default function Navbar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const { setSearchQuery } = useFeedStore();
+  const { theme, toggleTheme } = useTheme();
+  const [searchInput, setSearchInput] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pathname !== "/") router.push("/");
+    setSearchQuery(searchInput);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    toast.success("Logged out");
+    router.push("/login");
+  };
+
+  const displayName = user?.displayName || user?.name || user?.username || "";
+  const avatar = user?.avatar;
+
   return (
-    <div
-      style={{
-        background: "var(--cp-bg)",
-        borderBottom: "1px solid var(--cp-border)",
-        backdropFilter: "blur(12px)",
-      }}
-      className="sticky top-0 bg-amber-50 py-6 z-50">
-      <header
-        className="flex justify-between items-center w-full h-16 px-4 rounded-2xl mb-2"
-        style={{
-          background: "var(--cp-surface)",
-          borderBottom: "1px solid var(--cp-border)",
-          backdropFilter: "blur(12px)",
-        }}
-      >
-        {/* Search */}
-        <div className="flex-1 max-w-md">
-          <div className="relative group">
-            <span
-              className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-lg transition-colors"
-              style={{ color: "var(--cp-muted)" }}
-            >
-              search
-            </span>
-            <input
-              type="text"
-              placeholder="Search campus gossip..."
-              className="w-full rounded-2xl pl-12 pr-4 py-2.5 text-sm outline-none transition-all"
-              style={{
-                background: "var(--cp-surface-2)",
-                color: "var(--cp-text)",
-                border: "1px solid var(--cp-border)",
-              }}
-            />
-          </div>
+    <header
+      className="sticky top-0 z-20 flex items-center gap-4 px-6 py-3"
+      style={{ background: "var(--cp-surface)", borderBottom: "1px solid var(--cp-border)" }}
+    >
+      {/* Search */}
+      <form onSubmit={handleSearch} className="flex-1 max-w-md">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full" style={{ background: "var(--cp-surface-2)", border: "1px solid var(--cp-border)" }}>
+          <span className="material-symbols-outlined text-lg" style={{ color: "var(--cp-muted)" }}>search</span>
+          <input
+            type="search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search posts…"
+            className="flex-1 bg-transparent text-sm outline-none"
+            style={{ color: "var(--cp-text)" }}
+          />
         </div>
+      </form>
 
-        {/* Right actions */}
-        <div className="flex items-center gap-3 ml-6">
-          <button
-            className="p-2 rounded-xl transition-colors"
-            style={{ color: "var(--cp-muted)" }}
-            aria-label="Notifications"
-          >
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
+      <div className="flex items-center gap-2 ml-auto">
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-xl transition-all hover:opacity-80"
+          style={{ color: "var(--cp-muted)" }}
+          aria-label="Toggle theme"
+        >
+          <span className="material-symbols-outlined text-xl">{theme === "dark" ? "light_mode" : "dark_mode"}</span>
+        </button>
 
-          <button
-            className="p-2 rounded-xl transition-colors"
-            style={{ color: "var(--cp-accent)" }}
-            aria-label="Trending"
-          >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              local_fire_department
-            </span>
-          </button>
+        {isAuthenticated ? (
+          <>
+            {/* Notifications */}
+            <Link href="/notifications"
+              className="relative p-2 rounded-xl transition-all hover:opacity-80"
+              style={{ color: pathname === "/notifications" ? "var(--cp-primary)" : "var(--cp-muted)" }}>
+              <span className="material-symbols-outlined text-xl">notifications</span>
+            </Link>
 
-          {/* Avatar */}
-          <div
-            className="w-10 h-10 rounded-full overflow-hidden"
-            style={{ border: "2px solid var(--cp-primary)" }}
-          >
-            <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCreFSxDEvLmZcXBlgaVO2MalBoc0aeH-svysyoQeXqgyE1aXs9Muo94GWVijtYuTB6NBNs0QT94mKHadEkoE3dZzGUaZ8PRYyo_3QRDrLiHh65c2FS0tQnbKOmZDwdCneyoOCyakJbeKbOrXqs423F2G6U0rUtUCvDX1HOf5Li-wimC0jcIgjM7JHBllV_S_gAHntCq99DxGJ0Ow8Cwi9v8NDwncEPhKe7rBwXdirRbOpmzFnv3fy79ohgR5pQ50Z9O8RdkwIcTS0"
-              alt="User profile"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-      </header>
-    </div>
+            {/* User avatar dropdown */}
+            <div className="relative group">
+              <button className="flex items-center gap-2 p-1.5 rounded-xl transition-all hover:opacity-90">
+                <div className="w-8 h-8 rounded-full overflow-hidden" style={{ background: "var(--cp-surface-2)" }}>
+                  {avatar
+                    ? <img src={avatar} className="w-full h-full object-cover" alt="" />
+                    : <div className="w-full h-full flex items-center justify-center text-xs font-bold" style={{ color: "var(--cp-primary)" }}>
+                        {displayName[0]?.toUpperCase()}
+                      </div>}
+                </div>
+              </button>
+              {/* Dropdown */}
+              <div className="absolute right-0 top-full mt-2 w-52 rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-30 overflow-hidden"
+                style={{ background: "var(--cp-surface)", border: "1px solid var(--cp-border)" }}>
+                <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--cp-border)" }}>
+                  <p className="text-sm font-bold" style={{ color: "var(--cp-text)" }}>{displayName}</p>
+                  {user?.username && <p className="text-xs" style={{ color: "var(--cp-muted)" }}>@{user.username}</p>}
+                </div>
+                <Link href={`/profile/${user?._id}`} className="flex items-center gap-2 px-4 py-3 text-sm transition-colors hover:opacity-80"
+                  style={{ color: "var(--cp-text)" }}>
+                  <span className="material-symbols-outlined text-lg">person</span> Profile
+                </Link>
+                <Link href="/settings" className="flex items-center gap-2 px-4 py-3 text-sm transition-colors hover:opacity-80"
+                  style={{ color: "var(--cp-text)" }}>
+                  <span className="material-symbols-outlined text-lg">settings</span> Settings
+                </Link>
+                <button onClick={handleLogout}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-sm transition-colors hover:opacity-80"
+                  style={{ color: "var(--cp-error)", borderTop: "1px solid var(--cp-border)" }}>
+                  <span className="material-symbols-outlined text-lg">logout</span> Log out
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <Link href="/login"
+            className="px-4 py-2 rounded-xl text-sm font-bold transition-all hover:opacity-90"
+            style={{ background: "var(--cp-primary)", color: "#fff" }}>
+            Login
+          </Link>
+        )}
+      </div>
+    </header>
   );
 }
