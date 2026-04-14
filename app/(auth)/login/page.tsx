@@ -9,16 +9,16 @@ export default function LoginPage() {
   const router = useRouter();
   const { sendOtp, verifyOtp, isLoading } = useAuthStore();
   const { theme, toggleTheme } = useTheme();
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [step, setStep] = useState<"email" | "otp">("email");
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (phone.length < 10) { toast.error("Enter a valid 10-digit number"); return; }
+    if (!email.includes("@")) { toast.error("Enter a valid email address"); return; }
     try {
-      await sendOtp(phone);
-      toast.success("OTP sent to +91 " + phone);
+      await sendOtp(email);
+      toast.success("OTP sent to " + email);
       setStep("otp");
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to send OTP");
@@ -29,7 +29,7 @@ export default function LoginPage() {
     e.preventDefault();
     if (otp.length !== 6) { toast.error("Enter the 6-digit OTP"); return; }
     try {
-      const { needsProfile } = await verifyOtp(phone, otp);
+      const { needsProfile } = await verifyOtp(email, otp);
       toast.success("Welcome to College Paglu! 🎉");
       router.push(needsProfile ? "/complete-profile" : "/");
     } catch (err: any) {
@@ -136,39 +136,29 @@ export default function LoginPage() {
           </div>
 
           <h1 className="text-2xl font-extrabold mb-1" style={{ color: "var(--cp-text)" }}>
-            {step === "phone" ? "Welcome back 👋" : "Check your phone 📱"}
+            {step === "email" ? "Welcome back 👋" : "Check your inbox 📧"}
           </h1>
           <p className="text-sm mb-8" style={{ color: "var(--cp-muted)" }}>
-            {step === "phone"
-              ? "Login or sign up with your phone number"
-              : `OTP sent to +91 ${phone}`}
+            {step === "email"
+              ? "Login or sign up with your college email"
+              : `OTP sent to ${email}`}
           </p>
 
-          {step === "phone" ? (
+          {step === "email" ? (
             <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
               <div>
                 <label
                   className="text-[10px] font-black uppercase tracking-widest mb-2 block"
                   style={{ color: "var(--cp-muted)" }}
                 >
-                  Mobile Number
+                  Email Address
                 </label>
                 <div className="flex gap-2">
-                  <div
-                    className="flex items-center px-3 rounded-xl text-sm font-bold shrink-0"
-                    style={{
-                      background: "var(--cp-surface-2)",
-                      border: "1px solid var(--cp-border)",
-                      color: "var(--cp-muted)",
-                    }}
-                  >
-                    🇮🇳 +91
-                  </div>
                   <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    placeholder="Phone number"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value.toLowerCase().trim())}
+                    placeholder="student@college.edu"
                     className="flex-1 px-4 py-3 rounded-xl text-sm outline-none font-bold transition-all"
                     style={{
                       background: "var(--cp-surface-2)",
@@ -176,14 +166,13 @@ export default function LoginPage() {
                       color: "var(--cp-text)",
                     }}
                     autoFocus
-                    inputMode="numeric"
                   />
                 </div>
               </div>
 
               <button
                 type="submit"
-                disabled={isLoading || phone.length < 10}
+                disabled={isLoading || !email.includes("@")}
                 className="w-full py-3.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 mt-1"
                 style={{ background: "var(--cp-primary)", color: "#fff" }}
               >
@@ -205,12 +194,12 @@ export default function LoginPage() {
             <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4">
               <button
                 type="button"
-                onClick={() => { setStep("phone"); setOtp(""); }}
+                onClick={() => { setStep("email"); setOtp(""); }}
                 className="flex items-center gap-1.5 text-xs mb-1 transition-colors"
                 style={{ color: "var(--cp-muted)" }}
               >
                 <span className="material-symbols-outlined text-sm">arrow_back</span>
-                Change number
+                Change email
               </button>
 
               <div>

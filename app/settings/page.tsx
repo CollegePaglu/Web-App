@@ -154,8 +154,8 @@ export default function SettingsPage() {
           <h2 className="text-sm font-bold uppercase tracking-widest mb-2" style={{ color: "var(--cp-muted)" }}>Account</h2>
           <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid var(--cp-border)" }}>
             <div>
-              <p className="text-sm font-semibold" style={{ color: "var(--cp-text)" }}>Phone</p>
-              <p className="text-xs" style={{ color: "var(--cp-muted)" }}>{user.phone || "—"}</p>
+              <p className="text-sm font-semibold" style={{ color: "var(--cp-text)" }}>Email</p>
+              <p className="text-xs" style={{ color: "var(--cp-muted)" }}>{user.email || "—"}</p>
             </div>
           </div>
           <div className="flex items-center justify-between py-3" style={{ borderBottom: "1px solid var(--cp-border)" }}>

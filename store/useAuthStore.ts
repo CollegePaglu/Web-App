@@ -33,8 +33,8 @@ interface AuthState {
   isLoading: boolean;
 
   // Actions
-  sendOtp: (phone: string) => Promise<void>;
-  verifyOtp: (phone: string, otp: string) => Promise<{ needsProfile: boolean }>;
+  sendOtp: (email: string) => Promise<void>;
+  verifyOtp: (email: string, otp: string) => Promise<{ needsProfile: boolean }>;
   completeProfile: (data: Record<string, unknown>) => Promise<void>;
   fetchMe: () => Promise<void>;
   updateProfile: (data: Record<string, unknown>) => Promise<void>;
@@ -51,19 +51,19 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
 
-      sendOtp: async (phone) => {
+      sendOtp: async (email) => {
         set({ isLoading: true });
         try {
-          await authApi.sendOtp(phone);
+          await authApi.sendOtp(email);
         } finally {
           set({ isLoading: false });
         }
       },
 
-      verifyOtp: async (phone, otp) => {
+      verifyOtp: async (email, otp) => {
         set({ isLoading: true });
         try {
-          const { data } = await authApi.verifyOtp(phone, otp);
+          const { data } = await authApi.verifyOtp(email, otp);
           const { accessToken, refreshToken, user } = data.data;
           localStorage.setItem("cp_access_token", accessToken);
           localStorage.setItem("cp_refresh_token", refreshToken);
