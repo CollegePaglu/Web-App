@@ -1,0 +1,89 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import "tailwindcss";
+
+/* ─── Tailwind v4 theme tokens ─────────────────────────────────────────────── */
+@theme {
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+
+  --radius-sm:   0.5rem;
+  --radius-md:   1rem;
+  --radius-lg:   1.5rem;
+  --radius-xl:   2rem;
+  --radius-full: 9999px;
+
+  /* Light mode color tokens — these become bg-cp-primary, text-cp-text etc. */
+  --color-cp-primary:  #3FAF9F;
+  --color-cp-bg:       #F8FAFB;
+  --color-cp-text:     #1E1E1E;
+  --color-cp-muted:    #6B7280;
+  --color-cp-accent:   #FACC15;
+  --color-cp-blue:     #60A5FA;
+  --color-cp-success:  #22C55E;
+  --color-cp-error:    #EF4444;
+  --color-cp-surface:  #FFFFFF;
+  --color-cp-surface2: #F0F4F5;
+}
+
+/* ─── Raw CSS variables (for inline styles & dynamic dark swap) ─────────────── */
+:root {
+  --cp-primary:       #3FAF9F;
+  --cp-bg:            #F8FAFB;
+  --cp-text:          #1E1E1E;
+  --cp-muted:         #6B7280;
+  --cp-accent:        #FACC15;
+  --cp-blue:          #60A5FA;
+  --cp-success:       #22C55E;
+  --cp-error:         #EF4444;
+  --cp-surface:       #FFFFFF;
+  --cp-surface-2:     #F0F4F5;
+  --cp-border:        rgba(0, 0, 0, 0.08);
+  --cp-border-strong: rgba(0, 0, 0, 0.15);
+  --cp-primary-10:    rgba(63, 175, 159, 0.10);
+  --cp-primary-20:    rgba(63, 175, 159, 0.20);
+}
+
+.dark {
+  --cp-primary:       #4FD1C5;
+  --cp-bg:            #0F172A;
+  --cp-text:          #E5E7EB;
+  --cp-muted:         #9CA3AF;
+  --cp-accent:        #FCD34D;
+  --cp-blue:          #60A5FA;
+  --cp-success:       #22C55E;
+  --cp-error:         #F87171;
+  --cp-surface:       #1E2D3D;
+  --cp-surface-2:     #162032;
+  --cp-border:        rgba(255, 255, 255, 0.08);
+  --cp-border-strong: rgba(255, 255, 255, 0.15);
+  --cp-primary-10:    rgba(79, 209, 197, 0.10);
+  --cp-primary-20:    rgba(79, 209, 197, 0.20);
+}
+
+/* ─── Base ──────────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  transition: background-color 0.25s ease, color 0.15s ease, border-color 0.25s ease;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--cp-bg);
+  color: var(--cp-text);
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.cp-card {
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--radius-md);
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--cp-border-strong); border-radius: 99px; }
