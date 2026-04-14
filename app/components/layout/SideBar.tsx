@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "@/app/context/ThemeContext";
 
 const navItems = [
-  { label: "Home", icon: "home", href: "/" },
+  { label: "Home", icon: "home", href: "/feed" },
   { label: "Confessions", icon: "chat_bubble", href: "/confessions" },
   { label: "Memes", icon: "mood", href: "/memes" },
   { label: "Societies", icon: "groups", href: "/societies" },

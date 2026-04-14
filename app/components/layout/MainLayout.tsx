@@ -12,7 +12,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
       <SideBar />
 
       <main className="flex-1 max-w-2xl mx-auto py-8 px-4 flex flex-col gap-6">
-        
+        <Navbar />
         {children}
       </main>
 
