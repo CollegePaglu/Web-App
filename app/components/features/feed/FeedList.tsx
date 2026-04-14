@@ -49,44 +49,45 @@ export default function FeedList() {
 
   return (
     <div className="flex flex-col gap-0">
-      {/* Controls */}
-      <div className="sticky top-0 z-10 pb-3" style={{ background: "var(--cp-bg)" }}>
-        {/* Sort */}
-        <div className="flex gap-2 mb-2 pt-1">
-          {SORT_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setSortBy(opt.value)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all"
-              style={{
-                background: sortBy === opt.value ? "var(--cp-primary)" : "var(--cp-surface)",
-                color: sortBy === opt.value ? "#fff" : "var(--cp-muted)",
-                border: `1px solid ${sortBy === opt.value ? "var(--cp-primary)" : "var(--cp-border)"}`,
-              }}
-            >
-              <span className="material-symbols-outlined text-sm">{opt.icon}</span>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        {/* Filter */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {TYPE_FILTERS.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setFilterType(f.value)}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0"
-              style={{
-                background: filterType === f.value ? "var(--cp-primary-10)" : "transparent",
-                color: filterType === f.value ? "var(--cp-primary)" : "var(--cp-muted)",
-                border: `1px solid ${filterType === f.value ? "var(--cp-primary)" : "var(--cp-border)"}`,
-              }}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+      {/* Controls — single scrollable row */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 scrollbar-hide">
+        {/* Sort group */}
+        {SORT_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setSortBy(opt.value)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold transition-all shrink-0"
+            style={{
+              background: sortBy === opt.value ? "var(--cp-primary)" : "var(--cp-surface)",
+              color: sortBy === opt.value ? "#fff" : "var(--cp-muted)",
+              border: `1px solid ${sortBy === opt.value ? "var(--cp-primary)" : "var(--cp-border)"}`,
+            }}
+          >
+            <span className="material-symbols-outlined text-sm">{opt.icon}</span>
+            {opt.label}
+          </button>
+        ))}
+
+        {/* Divider */}
+        <div className="w-px h-5 shrink-0" style={{ background: "var(--cp-border)" }} />
+
+        {/* Filter group */}
+        {TYPE_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => setFilterType(f.value)}
+            className="px-3 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0"
+            style={{
+              background: filterType === f.value ? "var(--cp-primary-10)" : "transparent",
+              color: filterType === f.value ? "var(--cp-primary)" : "var(--cp-muted)",
+              border: `1px solid ${filterType === f.value ? "var(--cp-primary)" : "var(--cp-border)"}`,
+            }}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
+
 
       {/* Loading skeleton */}
       {isLoading && (

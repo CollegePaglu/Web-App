@@ -2,26 +2,23 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
-import toast from "react-hot-toast";
 import { useTheme } from "@/app/context/ThemeContext";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const router = useRouter();
   const { sendOtp, verifyOtp, isLoading } = useAuthStore();
-  const { theme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"phone" | "otp">("phone");
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone || phone.length < 10) {
-      toast.error("Enter a valid phone number");
-      return;
-    }
+    if (phone.length < 10) { toast.error("Enter a valid 10-digit number"); return; }
     try {
       await sendOtp(phone);
-      toast.success("OTP sent!");
+      toast.success("OTP sent to +91 " + phone);
       setStep("otp");
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to send OTP");
@@ -30,154 +27,250 @@ export default function LoginPage() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otp || otp.length !== 6) {
-      toast.error("Enter the 6-digit OTP");
-      return;
-    }
+    if (otp.length !== 6) { toast.error("Enter the 6-digit OTP"); return; }
     try {
       const { needsProfile } = await verifyOtp(phone, otp);
-      toast.success("Logged in!");
-      if (needsProfile) {
-        router.push("/complete-profile");
-      } else {
-        router.push("/");
-      }
+      toast.success("Welcome to College Paglu! 🎉");
+      router.push(needsProfile ? "/complete-profile" : "/");
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Invalid OTP");
+      toast.error(err?.response?.data?.message || "Invalid OTP. Try again");
     }
   };
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
+      className="min-h-screen flex"
       style={{ background: "var(--cp-bg)" }}
     >
+      {/* ── Left decorative panel (hidden on mobile) ── */}
       <div
-        className="w-full max-w-md p-8 rounded-3xl shadow-2xl"
-        style={{ background: "var(--cp-surface)", border: "1px solid var(--cp-border)" }}
+        className="hidden lg:flex flex-col justify-between w-1/2 p-12 relative overflow-hidden"
+        style={{ background: "linear-gradient(145deg, var(--cp-primary), #1a6b63)" }}
       >
-        {/* Logo & Headline */}
-        <div className="text-center mb-8">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-black"
-            style={{ background: "var(--cp-primary)", color: "#fff" }}
-          >
-            CP
+        {/* Background blobs */}
+        <div
+          className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-20 -translate-y-1/2 translate-x-1/2"
+          style={{ background: "#fff" }}
+        />
+        <div
+          className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-10 translate-y-1/2 -translate-x-1/2"
+          style={{ background: "#fff" }}
+        />
+
+        {/* Brand */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white text-lg font-black">
+              CP
+            </div>
+            <span className="text-white font-extrabold text-xl">College Paglu</span>
           </div>
-          <h1 className="text-2xl font-extrabold" style={{ color: "var(--cp-text)" }}>
-            College Paglu
-          </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--cp-muted)" }}>
-            Your campus, your vibe 🎓
-          </p>
         </div>
 
-        {step === "phone" ? (
-          <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
-            <div>
-              <label
-                className="text-xs font-bold uppercase tracking-widest mb-2 block"
+        {/* Hero copy */}
+        <div className="relative z-10">
+          <h2 className="text-4xl font-black text-white leading-tight mb-4">
+            Your campus,<br />your vibe. 🎓
+          </h2>
+          <p className="text-white/80 text-base leading-relaxed mb-8">
+            Memes, confessions, society updates, and real campus conversations — all in one place.
+          </p>
+
+          {/* Social proof */}
+          <div className="flex items-center gap-4">
+            <div className="flex -space-x-2">
+              {["aryan", "priya", "rahul", "nisha", "dev"].map((seed) => (
+                <img
+                  key={seed}
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`}
+                  className="w-8 h-8 rounded-full border-2 border-white"
+                  alt=""
+                />
+              ))}
+            </div>
+            <p className="text-white/80 text-sm font-semibold">
+              12,000+ students already vibing
+            </p>
+          </div>
+        </div>
+
+        {/* Feature pills */}
+        <div className="relative z-10 flex flex-wrap gap-2">
+          {["🎭 Anonymous Confessions", "😂 Campus Memes", "📢 Society Updates", "🏆 Leaderboard"].map((tag) => (
+            <span
+              key={tag}
+              className="px-3 py-1.5 rounded-full text-xs font-bold"
+              style={{ background: "rgba(255,255,255,0.15)", color: "#fff" }}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Right login panel ── */}
+      <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className="absolute top-6 right-6 p-2 rounded-xl transition-all hover:opacity-80"
+          style={{ color: "var(--cp-muted)", background: "var(--cp-surface)" }}
+        >
+          <span className="material-symbols-outlined text-xl">
+            {theme === "dark" ? "light_mode" : "dark_mode"}
+          </span>
+        </button>
+
+        <div className="w-full max-w-sm">
+          {/* Mobile brand */}
+          <div className="flex items-center gap-3 mb-8 lg:hidden">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black"
+              style={{ background: "var(--cp-primary)", color: "#fff" }}
+            >
+              CP
+            </div>
+            <span className="font-extrabold text-lg" style={{ color: "var(--cp-text)" }}>
+              College Paglu
+            </span>
+          </div>
+
+          <h1 className="text-2xl font-extrabold mb-1" style={{ color: "var(--cp-text)" }}>
+            {step === "phone" ? "Welcome back 👋" : "Check your phone 📱"}
+          </h1>
+          <p className="text-sm mb-8" style={{ color: "var(--cp-muted)" }}>
+            {step === "phone"
+              ? "Login or sign up with your phone number"
+              : `OTP sent to +91 ${phone}`}
+          </p>
+
+          {step === "phone" ? (
+            <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
+              <div>
+                <label
+                  className="text-[10px] font-black uppercase tracking-widest mb-2 block"
+                  style={{ color: "var(--cp-muted)" }}
+                >
+                  Mobile Number
+                </label>
+                <div className="flex gap-2">
+                  <div
+                    className="flex items-center px-3 rounded-xl text-sm font-bold shrink-0"
+                    style={{
+                      background: "var(--cp-surface-2)",
+                      border: "1px solid var(--cp-border)",
+                      color: "var(--cp-muted)",
+                    }}
+                  >
+                    🇮🇳 +91
+                  </div>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    placeholder="Phone number"
+                    className="flex-1 px-4 py-3 rounded-xl text-sm outline-none font-bold transition-all"
+                    style={{
+                      background: "var(--cp-surface-2)",
+                      border: "1px solid var(--cp-border)",
+                      color: "var(--cp-text)",
+                    }}
+                    autoFocus
+                    inputMode="numeric"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading || phone.length < 10}
+                className="w-full py-3.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 mt-1"
+                style={{ background: "var(--cp-primary)", color: "#fff" }}
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Sending…
+                  </span>
+                ) : (
+                  "Send OTP →"
+                )}
+              </button>
+
+              <p className="text-center text-[10px]" style={{ color: "var(--cp-muted)" }}>
+                New here? Same link — we'll create your account automatically.
+              </p>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4">
+              <button
+                type="button"
+                onClick={() => { setStep("phone"); setOtp(""); }}
+                className="flex items-center gap-1.5 text-xs mb-1 transition-colors"
                 style={{ color: "var(--cp-muted)" }}
               >
-                Phone Number
-              </label>
-              <div className="flex gap-2">
-                <span
-                  className="flex items-center px-4 rounded-xl text-sm font-bold"
-                  style={{
-                    background: "var(--cp-surface-2)",
-                    border: "1px solid var(--cp-border)",
-                    color: "var(--cp-text)",
-                  }}
+                <span className="material-symbols-outlined text-sm">arrow_back</span>
+                Change number
+              </button>
+
+              <div>
+                <label
+                  className="text-[10px] font-black uppercase tracking-widest mb-2 block"
+                  style={{ color: "var(--cp-muted)" }}
                 >
-                  +91
-                </span>
+                  6-Digit OTP
+                </label>
                 <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  placeholder="10-digit number"
-                  className="flex-1 px-4 py-3 rounded-xl text-sm outline-none transition-all"
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="• • • • • •"
+                  className="w-full px-4 py-4 rounded-xl text-center font-black outline-none transition-all"
                   style={{
                     background: "var(--cp-surface-2)",
-                    border: "1px solid var(--cp-border)",
+                    border: `2px solid ${otp.length === 6 ? "var(--cp-primary)" : "var(--cp-border)"}`,
                     color: "var(--cp-text)",
+                    fontSize: "1.5rem",
+                    letterSpacing: "0.5em",
                   }}
                   autoFocus
                   inputMode="numeric"
+                  maxLength={6}
                 />
               </div>
-            </div>
-            <button
-              type="submit"
-              disabled={isLoading || phone.length < 10}
-              className="w-full py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
-              style={{ background: "var(--cp-primary)", color: "#fff" }}
-            >
-              {isLoading ? "Sending…" : "Send OTP →"}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4">
-            <button
-              type="button"
-              onClick={() => setStep("phone")}
-              className="flex items-center gap-2 text-xs mb-2 transition-colors"
-              style={{ color: "var(--cp-muted)" }}
-            >
-              <span className="material-symbols-outlined text-sm">arrow_back</span>
-              Change number
-            </button>
-            <p className="text-xs" style={{ color: "var(--cp-muted)" }}>
-              OTP sent to +91 {phone}
-            </p>
-            <div>
-              <label
-                className="text-xs font-bold uppercase tracking-widest mb-2 block"
-                style={{ color: "var(--cp-muted)" }}
-              >
-                Enter OTP
-              </label>
-              <input
-                type="text"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="6-digit OTP"
-                className="w-full px-4 py-3 rounded-xl text-sm outline-none tracking-[0.5em] text-center font-bold"
-                style={{
-                  background: "var(--cp-surface-2)",
-                  border: "1px solid var(--cp-border)",
-                  color: "var(--cp-text)",
-                  fontSize: "1.25rem",
-                }}
-                autoFocus
-                inputMode="numeric"
-                maxLength={6}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isLoading || otp.length !== 6}
-              className="w-full py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
-              style={{ background: "var(--cp-primary)", color: "#fff" }}
-            >
-              {isLoading ? "Verifying…" : "Verify & Login ✓"}
-            </button>
-            <button
-              type="button"
-              onClick={handleSendOtp}
-              disabled={isLoading}
-              className="text-xs underline text-center"
-              style={{ color: "var(--cp-muted)" }}
-            >
-              Resend OTP
-            </button>
-          </form>
-        )}
 
-        <p className="mt-6 text-center text-[10px]" style={{ color: "var(--cp-muted)" }}>
-          By continuing you agree to our Terms & Privacy Policy
-        </p>
+              <button
+                type="submit"
+                disabled={isLoading || otp.length !== 6}
+                className="w-full py-3.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+                style={{ background: "var(--cp-primary)", color: "#fff" }}
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Verifying…
+                  </span>
+                ) : (
+                  "Verify & Login ✓"
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={isLoading}
+                className="text-xs text-center transition-colors hover:opacity-80"
+                style={{ color: "var(--cp-primary)" }}
+              >
+                Didn't get it? Resend OTP
+              </button>
+            </form>
+          )}
+
+          <p className="mt-8 text-center text-[10px]" style={{ color: "var(--cp-muted)" }}>
+            By continuing you agree to our Terms &amp; Privacy Policy
+          </p>
+        </div>
       </div>
     </div>
   );

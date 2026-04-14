@@ -56,11 +56,11 @@ export default function ExplorePage() {
           </div>
         </form>
 
-        {/* Type filters */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
+        {/* Controls — single scrollable row */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
           {TYPE_FILTERS.map((f) => (
             <button key={f.value} onClick={() => setFilterType(f.value)}
-              className="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0"
+              className="px-3 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0"
               style={{
                 background: filterType === f.value ? "var(--cp-primary)" : "var(--cp-surface)",
                 color: filterType === f.value ? "#fff" : "var(--cp-muted)",
@@ -69,20 +69,20 @@ export default function ExplorePage() {
               {f.label}
             </button>
           ))}
-        </div>
 
-        {/* Sort */}
-        <div className="flex gap-2 mb-4">
+          <div className="w-px h-5 shrink-0" style={{ background: "var(--cp-border)" }} />
+
           {[
             { v: "trending" as const, l: "🔥 Trending" },
             { v: "recent" as const, l: "🕐 Recent" },
             { v: "top" as const, l: "⭐ Top" },
           ].map(({ v, l }) => (
             <button key={v} onClick={() => setSortBy(v)}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+              className="px-3 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0"
               style={{
                 background: sortBy === v ? "var(--cp-primary-10)" : "transparent",
                 color: sortBy === v ? "var(--cp-primary)" : "var(--cp-muted)",
+                border: `1px solid ${sortBy === v ? "var(--cp-primary)" : "var(--cp-border)"}`,
               }}>
               {l}
             </button>

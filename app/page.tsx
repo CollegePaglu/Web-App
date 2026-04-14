@@ -7,7 +7,8 @@ export default function HomePage() {
   return (
     <MainLayout>
       <Navbar />
-      <div className="flex-1 px-6 py-4 max-w-2xl w-full self-center">
+      {/* Feed column — max-width centered, full scrollable area */}
+      <div className="flex-1 w-full max-w-2xl mx-auto px-4 py-4">
         <CreatePost />
         <FeedList />
       </div>
