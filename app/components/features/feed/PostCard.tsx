@@ -1,17 +1,15 @@
 "use client";
 import { useState } from "react";
 import { Post } from "@/store/useFeedStore";
-import { useFeedStore } from "@/store/useFeedStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { postsApi } from "@/lib/api";
+import Link from "next/link";
 import toast from "react-hot-toast";
 import CommentsPanel from "./CommentsPanel";
 
 interface Props { post: Post; }
 
-const REACTION_EMOJIS: Record<string, string> = {
-  up: "👍", down: "👎",
-};
+const CONTENT_TRUNCATE = 280;
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -27,32 +25,79 @@ function timeAgo(dateStr: string) {
 
 export default function PostCard({ post }: Props) {
   const { isAuthenticated } = useAuthStore();
-  const { updatePostVote, removePost } = useFeedStore();
   const { user } = useAuthStore();
   const [showComments, setShowComments] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
   const [shareClicked, setShareClicked] = useState(false);
+  const [showFull, setShowFull] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [reported, setReported] = useState(false);
 
-  const author = post.isAnonymous
+  // Local optimistic vote state
+  const [localPost, setLocalPost] = useState(post);
+
+  // Helper to broadcast vote changes to all FeedList instances
+  const broadcastVote = (upvotes: number, downvotes: number, userVote: "up" | "down" | null) => {
+    setLocalPost((p) => ({ ...p, upvotes, downvotes, userVote }));
+    window.dispatchEvent(new CustomEvent("post-voted", { detail: { id: localPost._id, upvotes, downvotes, userVote } }));
+  };
+
+  // Helper to broadcast comment count delta
+  const broadcastComment = (delta: number) => {
+    setLocalPost((p) => ({ ...p, commentsCount: (p.commentsCount || 0) + delta }));
+    window.dispatchEvent(new CustomEvent("post-commented", { detail: { id: localPost._id, delta } }));
+  };
+
+  // Helper to broadcast deletion
+  const broadcastDelete = () => {
+    window.dispatchEvent(new CustomEvent("post-deleted", { detail: { id: localPost._id } }));
+  };
+
+  const author = localPost.isAnonymous
     ? { name: "Anonymous 🎭", avatar: null }
     : {
-        name: post.author?.displayName || post.author?.name || post.author?.username || "User",
-        avatar: post.author?.avatar,
+        name: localPost.author?.displayName || localPost.author?.name || localPost.author?.username || "User",
+        avatar: localPost.author?.avatar,
       };
+
+  const isOwner = user && localPost.author && (user._id === localPost.author._id || user.id === localPost.author._id);
+  
+  // Handle backend image/video fields vs old demo media field
+  const mediaToRender = localPost.media || [
+    ...(localPost.videoUrl ? [{ url: localPost.videoUrl, type: "video" }] : []),
+    ...(localPost.images?.map((url: string) => ({ url, type: "image" })) || [])
+  ];
+
+  const isTextOnly = !mediaToRender || mediaToRender.length === 0;
+  const contentTooLong = (localPost.content?.length || 0) > CONTENT_TRUNCATE;
 
   const handleVote = async (type: "up" | "down") => {
     if (!isAuthenticated) { toast.error("Login to vote"); return; }
     if (isVoting) return;
     setIsVoting(true);
+
+    if (localPost._id.startsWith("demo_")) {
+      const isSameVote = localPost.userVote === type;
+      const newVote = isSameVote ? null : type;
+      let upDelta = 0; let downDelta = 0;
+      if (localPost.userVote === "up") upDelta = -1;
+      if (localPost.userVote === "down") downDelta = -1;
+      if (type === "up" && !isSameVote) upDelta = 1;
+      if (type === "down" && !isSameVote) downDelta = 1;
+      broadcastVote(localPost.upvotes + upDelta, localPost.downvotes + downDelta, newVote);
+      setIsVoting(false);
+      return;
+    }
+
     try {
-      const isSameVote = post.userVote === type;
+      const isSameVote = localPost.userVote === type;
       let res;
       if (isSameVote) {
-        res = await postsApi.removeVote(post._id);
-        updatePostVote(post._id, res.data.data.upvotes, res.data.data.downvotes, null);
+        res = await postsApi.removeVote(localPost._id);
+        broadcastVote(res.data.data.upvotes, res.data.data.downvotes, null);
       } else {
-        res = await postsApi.vote(post._id, type);
-        updatePostVote(post._id, res.data.data.upvotes, res.data.data.downvotes, type);
+        res = await postsApi.vote(localPost._id, type);
+        broadcastVote(res.data.data.upvotes, res.data.data.downvotes, type);
       }
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to vote");
@@ -64,23 +109,49 @@ export default function PostCard({ post }: Props) {
   const handleDelete = async () => {
     if (!confirm("Delete this post?")) return;
     try {
-      await postsApi.deletePost(post._id);
-      removePost(post._id);
+      await postsApi.deletePost(localPost._id);
+      broadcastDelete();
       toast.success("Post deleted");
     } catch { toast.error("Failed to delete"); }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const url = `${window.location.origin}/post/${post._id}`;
+    
+    // Check if running on mobile where native share makes the most sense
+    const isMobile = typeof navigator !== "undefined" && /mobile|android|iphone|ipad/i.test(navigator.userAgent.toLowerCase());
+
+    if (isMobile && navigator.share) {
+      try {
+        await navigator.share({
+          title: post.title || 'CollegePaglu',
+          text: 'Check out this post on CollegePaglu!',
+          url: url,
+        });
+        setShareClicked(true);
+        setTimeout(() => setShareClicked(false), 2000);
+        return; // Success
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error("Native share failed", err);
+        }
+      }
+    }
+    
+    // Fallback to clipboard
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
-      toast.success("Link copied!");
+      toast.success("Link copied to clipboard!");
     }
     setShareClicked(true);
     setTimeout(() => setShareClicked(false), 2000);
   };
 
-  const isOwner = user && post.author && (user._id === post.author._id || user.id === post.author._id);
+  const handleReport = () => {
+    setMenuOpen(false);
+    setReported(true);
+    toast.success("Reported to our team. Thanks! 🙏");
+  };
 
   const typeColors: Record<string, string> = {
     update: "var(--cp-blue)", text: "var(--cp-muted)", image: "var(--cp-success)", poll: "var(--cp-accent)", video: "var(--cp-error)",
@@ -102,49 +173,141 @@ export default function PostCard({ post }: Props) {
         {/* Header */}
         <div className="p-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0"
-              style={{ background: "var(--cp-surface-2)" }}>
-              {author.avatar ? (
-                <img src={author.avatar} alt={author.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-sm font-bold"
-                  style={{ color: "var(--cp-primary)" }}>
-                  {author.name[0]}
-                </div>
-              )}
-            </div>
+            {author._id && !localPost.isAnonymous ? (
+              <Link href={`/profile/${author._id}`} className="w-10 h-10 rounded-full overflow-hidden shrink-0 transition-transform hover:scale-105" style={{ background: "var(--cp-surface-2)" }}>
+                {author.avatar ? (
+                  <img src={author.avatar} alt={author.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-sm font-bold" style={{ color: "var(--cp-primary)" }}>
+                    {author.name[0]}
+                  </div>
+                )}
+              </Link>
+            ) : (
+              <div className="w-10 h-10 rounded-full overflow-hidden shrink-0" style={{ background: "var(--cp-surface-2)" }}>
+                {author.avatar ? (
+                  <img src={author.avatar} alt={author.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-sm font-bold" style={{ color: "var(--cp-primary)" }}>
+                    {author.name[0]}
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div>
-              <h4 className="font-bold text-sm" style={{ color: "var(--cp-text)" }}>{author.name}</h4>
-              <p className="text-[10px]" style={{ color: "var(--cp-muted)" }}>{timeAgo(post.createdAt)}</p>
+              {author._id && !localPost.isAnonymous ? (
+                <Link href={`/profile/${author._id}`} className="font-bold text-sm hover:underline" style={{ color: "var(--cp-text)" }}>
+                  {author.name}
+                </Link>
+              ) : (
+                <h4 className="font-bold text-sm" style={{ color: "var(--cp-text)" }}>{author.name}</h4>
+              )}
+              <Link href={`/post/${localPost._id}`} className="text-[10px] hover:underline block" style={{ color: "var(--cp-muted)" }}>
+                {timeAgo(localPost.createdAt)}
+              </Link>
             </div>
           </div>
-          {isOwner && (
-            <button onClick={handleDelete} className="p-2 rounded-lg transition-colors hover:text-red-500"
-              style={{ color: "var(--cp-muted)" }}>
-              <span className="material-symbols-outlined text-lg">delete</span>
-            </button>
-          )}
+
+          {/* Right header actions */}
+          <div className="flex items-center gap-2">
+            {isOwner && (
+              <button onClick={handleDelete} className="p-2 rounded-lg transition-colors hover:text-red-500" style={{ color: "var(--cp-muted)" }}>
+                <span className="material-symbols-outlined text-lg">delete</span>
+              </button>
+            )}
+            {/* ⋯ options for others' posts */}
+            {!isOwner && !localPost.isAnonymous && (
+              <div className="relative">
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="p-2 rounded-lg transition-colors hover:opacity-70"
+                  style={{ color: "var(--cp-muted)" }}
+                >
+                  <span className="material-symbols-outlined text-lg">more_vert</span>
+                </button>
+                {menuOpen && (
+                  <div
+                    className="absolute right-0 top-9 z-20 rounded-2xl overflow-hidden shadow-xl"
+                    style={{ background: "var(--cp-surface)", border: "1px solid var(--cp-border)", minWidth: "160px" }}
+                  >
+                    <button
+                      onClick={handleReport}
+                      disabled={reported}
+                      className="flex items-center gap-2 w-full px-4 py-3 text-sm font-semibold transition-colors hover:opacity-80"
+                      style={{ color: reported ? "var(--cp-muted)" : "#EF4444" }}
+                    >
+                      <span className="material-symbols-outlined text-base">flag</span>
+                      {reported ? "Reported" : "Report post"}
+                    </button>
+                  </div>
+                )}
+                {/* Click-outside dismiss */}
+                {menuOpen && (
+                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Title */}
-        {post.title && (
+        {localPost.title && (
           <div className="px-5 pb-2">
-            <h3 className="font-bold text-base leading-tight" style={{ color: "var(--cp-text)" }}>{post.title}</h3>
+            <Link href={`/post/${localPost._id}`}>
+              <h3 className="font-bold text-base leading-tight hover:underline" style={{ color: "var(--cp-text)" }}>{localPost.title}</h3>
+            </Link>
           </div>
         )}
 
-        {/* Body */}
-        {post.content && (
-          <div className="px-5 pb-4">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: "var(--cp-text)" }}>{post.content}</p>
-          </div>
+        {/* Body — text-only gets AppV1's accent bar treatment */}
+        {localPost.content && (
+          isTextOnly ? (
+            <div className="px-5 pb-4 flex items-stretch gap-4">
+              {/* Green accent bar (AppV1 glassAccentBar) */}
+              <div className="w-0.5 rounded-full shrink-0 self-stretch" style={{ background: "var(--cp-primary)", opacity: 0.75 }} />
+              <div className="flex-1">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium" style={{ color: "var(--cp-text)" }}>
+                  {contentTooLong && !showFull
+                    ? localPost.content.slice(0, CONTENT_TRUNCATE)
+                    : localPost.content}
+                </p>
+                {contentTooLong && !showFull && (
+                  <button
+                    onClick={() => setShowFull(true)}
+                    className="text-xs font-bold mt-1"
+                    style={{ color: "var(--cp-primary)" }}
+                  >
+                    …more
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="px-5 pb-3">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: "var(--cp-text)" }}>
+                {contentTooLong && !showFull
+                  ? localPost.content.slice(0, CONTENT_TRUNCATE)
+                  : localPost.content}
+              </p>
+              {contentTooLong && !showFull && (
+                <button
+                  onClick={() => setShowFull(true)}
+                  className="text-xs font-bold mt-1"
+                  style={{ color: "var(--cp-primary)" }}
+                >
+                  …more
+                </button>
+              )}
+            </div>
+          )
         )}
 
         {/* Media */}
-        {post.media && post.media.length > 0 && (
-          <div className={`${post.media.length === 1 ? "" : "grid grid-cols-2 gap-0.5"} overflow-hidden`}>
-            {post.media.map((m, i) => (
-              <div key={i} className={`overflow-hidden ${post.media!.length === 1 ? "aspect-video" : "aspect-square"}`}>
+        {mediaToRender && mediaToRender.length > 0 && (
+          <div className={`${mediaToRender.length === 1 ? "" : "grid grid-cols-2 gap-0.5"} overflow-hidden`}>
+            {mediaToRender.map((m: any, i: number) => (
+              <div key={i} className={`overflow-hidden ${mediaToRender.length === 1 ? "aspect-video" : "aspect-square"}`}>
                 {m.type === "video" ? (
                   <video src={m.url} controls className="w-full h-full object-cover" />
                 ) : (
@@ -157,17 +320,20 @@ export default function PostCard({ post }: Props) {
 
         {/* Actions */}
         <div className="p-4 flex items-center gap-4" style={{ borderTop: "1px solid var(--cp-border)" }}>
-          {/* Upvote */}
+          {/* Upvote — AppV1 "heart" style: shows count + "liked" */}
           <button
             onClick={() => handleVote("up")}
             disabled={isVoting}
             className="flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95"
-            style={{ color: post.userVote === "up" ? "var(--cp-primary)" : "var(--cp-muted)" }}
+            style={{ color: localPost.userVote === "up" ? "var(--cp-primary)" : "var(--cp-muted)" }}
           >
-            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: post.userVote === "up" ? "'FILL' 1" : "'FILL' 0" }}>
+            <span className="material-symbols-outlined text-lg"
+              style={{ fontVariationSettings: localPost.userVote === "up" ? "'FILL' 1" : "'FILL' 0" }}>
               thumb_up
             </span>
-            <span className="text-xs font-bold" style={{ color: "var(--cp-text)" }}>{post.upvotes || 0}</span>
+            <span className="text-xs font-bold" style={{ color: "var(--cp-text)" }}>
+              {(localPost.upvotes || 0).toLocaleString()} liked
+            </span>
           </button>
 
           {/* Downvote */}
@@ -175,12 +341,13 @@ export default function PostCard({ post }: Props) {
             onClick={() => handleVote("down")}
             disabled={isVoting}
             className="flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95"
-            style={{ color: post.userVote === "down" ? "var(--cp-error)" : "var(--cp-muted)" }}
+            style={{ color: localPost.userVote === "down" ? "var(--cp-error)" : "var(--cp-muted)" }}
           >
-            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: post.userVote === "down" ? "'FILL' 1" : "'FILL' 0" }}>
+            <span className="material-symbols-outlined text-lg"
+              style={{ fontVariationSettings: localPost.userVote === "down" ? "'FILL' 1" : "'FILL' 0" }}>
               thumb_down
             </span>
-            <span className="text-xs font-bold" style={{ color: "var(--cp-text)" }}>{post.downvotes || 0}</span>
+            <span className="text-xs font-bold" style={{ color: "var(--cp-text)" }}>{localPost.downvotes || 0}</span>
           </button>
 
           {/* Comments */}
@@ -190,24 +357,26 @@ export default function PostCard({ post }: Props) {
             style={{ color: "var(--cp-muted)" }}
           >
             <span className="material-symbols-outlined text-lg">chat_bubble_outline</span>
-            <span className="text-xs font-bold" style={{ color: "var(--cp-text)" }}>{post.commentsCount || 0}</span>
+            <span className="text-xs font-bold" style={{ color: "var(--cp-text)" }}>{localPost.commentsCount || 0}</span>
           </button>
 
           {/* Share */}
           <button
             onClick={handleShare}
-            className="flex items-center gap-1.5 ml-auto transition-colors"
-            style={{ color: shareClicked ? "var(--cp-primary)" : "var(--cp-muted)" }}
+            className="flex items-center gap-1.5 ml-auto transition-colors hover:opacity-70 active:scale-95"
+            style={{ 
+              color: shareClicked ? "var(--cp-primary)" : "var(--cp-muted)",
+            }}
           >
-            <span className="material-symbols-outlined text-lg">{shareClicked ? "check" : "share"}</span>
+            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'wght' 300" }}>
+              {shareClicked ? "check" : "share"}
+            </span>
           </button>
         </div>
       </article>
 
       {/* Comments Drawer */}
-      {showComments && (
-        <CommentsPanel postId={post._id} onClose={() => setShowComments(false)} />
-      )}
+      {showComments && <CommentsPanel postId={localPost._id} onClose={() => setShowComments(false)} updateCommentCount={broadcastComment} />}
     </>
   );
 }

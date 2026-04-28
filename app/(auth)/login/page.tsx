@@ -5,20 +5,31 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useTheme } from "@/app/context/ThemeContext";
 import toast from "react-hot-toast";
 
+/** Normalise to +91XXXXXXXXXX */
+function normalisePhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("91") && digits.length === 12) return "+" + digits;
+  if (digits.length === 10) return "+91" + digits;
+  return "+" + digits;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { sendOtp, verifyOtp, isLoading } = useAuthStore();
   const { theme, toggleTheme } = useTheme();
-  const [email, setEmail] = useState("");
+
+  const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"email" | "otp">("email");
+  const [step, setStep] = useState<"phone" | "otp">("phone");
+
+  const isPhoneValid = phone.replace(/\D/g, "").length === 10;
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.includes("@")) { toast.error("Enter a valid email address"); return; }
+    if (!isPhoneValid) { toast.error("Enter a valid 10-digit mobile number"); return; }
     try {
-      await sendOtp(email);
-      toast.success("OTP sent to " + email);
+      await sendOtp(normalisePhone(phone));
+      toast.success("OTP sent to your WhatsApp 📲");
       setStep("otp");
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to send OTP");
@@ -29,40 +40,30 @@ export default function LoginPage() {
     e.preventDefault();
     if (otp.length !== 6) { toast.error("Enter the 6-digit OTP"); return; }
     try {
-      const { needsProfile } = await verifyOtp(email, otp);
+      const { needsProfile } = await verifyOtp(normalisePhone(phone), otp);
       toast.success("Welcome to College Paglu! 🎉");
       router.push(needsProfile ? "/complete-profile" : "/");
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Invalid OTP. Try again");
+      console.error("OTP verification error:", err);
+      toast.error(err?.response?.data?.message || err.message || "Invalid OTP. Try again");
     }
   };
 
   return (
-    <div
-      className="min-h-screen flex"
-      style={{ background: "var(--cp-bg)" }}
-    >
+    <div className="min-h-screen flex" style={{ background: "var(--cp-bg)" }}>
       {/* ── Left decorative panel (hidden on mobile) ── */}
       <div
         className="hidden lg:flex flex-col justify-between w-1/2 p-12 relative overflow-hidden"
-        style={{ background: "linear-gradient(145deg, var(--cp-primary), #1a6b63)" }}
+        style={{ background: "linear-gradient(145deg, #1B9D6B, #0F6D48)" }}
       >
         {/* Background blobs */}
-        <div
-          className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-20 -translate-y-1/2 translate-x-1/2"
-          style={{ background: "#fff" }}
-        />
-        <div
-          className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-10 translate-y-1/2 -translate-x-1/2"
-          style={{ background: "#fff" }}
-        />
+        <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-20 -translate-y-1/2 translate-x-1/2" style={{ background: "#fff" }} />
+        <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full opacity-10 translate-y-1/2 -translate-x-1/2" style={{ background: "#fff" }} />
 
         {/* Brand */}
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white text-lg font-black">
-              CP
-            </div>
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white text-lg font-black">CP</div>
             <span className="text-white font-extrabold text-xl">College Paglu</span>
           </div>
         </div>
@@ -88,9 +89,7 @@ export default function LoginPage() {
                 />
               ))}
             </div>
-            <p className="text-white/80 text-sm font-semibold">
-              12,000+ students already vibing
-            </p>
+            <p className="text-white/80 text-sm font-semibold">12,000+ students already vibing</p>
           </div>
         </div>
 
@@ -124,55 +123,56 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           {/* Mobile brand */}
           <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black"
-              style={{ background: "var(--cp-primary)", color: "#fff" }}
-            >
-              CP
-            </div>
-            <span className="font-extrabold text-lg" style={{ color: "var(--cp-text)" }}>
-              College Paglu
-            </span>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black" style={{ background: "var(--cp-primary)", color: "#fff" }}>CP</div>
+            <span className="font-extrabold text-lg" style={{ color: "var(--cp-text)" }}>College Paglu</span>
           </div>
 
           <h1 className="text-2xl font-extrabold mb-1" style={{ color: "var(--cp-text)" }}>
-            {step === "email" ? "Welcome back 👋" : "Check your inbox 📧"}
+            {step === "phone" ? "Welcome back 👋" : "Check your WhatsApp 📲"}
           </h1>
           <p className="text-sm mb-8" style={{ color: "var(--cp-muted)" }}>
-            {step === "email"
-              ? "Login or sign up with your college email"
-              : `OTP sent to ${email}`}
+            {step === "phone"
+              ? "Enter your WhatsApp number to login or sign up"
+              : `OTP sent to +91 ${phone}`}
           </p>
 
-          {step === "email" ? (
+          {step === "phone" ? (
             <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
               <div>
-                <label
-                  className="text-[10px] font-black uppercase tracking-widest mb-2 block"
-                  style={{ color: "var(--cp-muted)" }}
-                >
-                  Email Address
+                <label className="text-[10px] font-black uppercase tracking-widest mb-2 block" style={{ color: "var(--cp-muted)" }}>
+                  WhatsApp Number
                 </label>
-                <div className="flex gap-2">
+                {/* Phone input with +91 prefix pill */}
+                <div
+                  className="flex items-center rounded-xl overflow-hidden"
+                  style={{ border: "1px solid var(--cp-border)", background: "var(--cp-surface-2)" }}
+                >
+                  <div
+                    className="px-3 py-3 text-sm font-bold shrink-0 flex items-center gap-1.5"
+                    style={{ background: "var(--cp-primary-10)", color: "var(--cp-primary)", borderRight: "1px solid var(--cp-border)" }}
+                  >
+                    🇮🇳 +91
+                  </div>
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value.toLowerCase().trim())}
-                    placeholder="student@college.edu"
-                    className="flex-1 px-4 py-3 rounded-xl text-sm outline-none font-bold transition-all"
-                    style={{
-                      background: "var(--cp-surface-2)",
-                      border: "1px solid var(--cp-border)",
-                      color: "var(--cp-text)",
-                    }}
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    placeholder="9876543210"
+                    className="flex-1 px-4 py-3 text-sm font-bold outline-none bg-transparent"
+                    style={{ color: "var(--cp-text)" }}
                     autoFocus
+                    inputMode="numeric"
+                    maxLength={10}
                   />
                 </div>
+                <p className="text-[10px] mt-1.5" style={{ color: "var(--cp-muted)" }}>
+                  You'll receive a 6-digit OTP on WhatsApp
+                </p>
               </div>
 
               <button
                 type="submit"
-                disabled={isLoading || !email.includes("@")}
+                disabled={isLoading || !isPhoneValid}
                 className="w-full py-3.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 mt-1"
                 style={{ background: "var(--cp-primary)", color: "#fff" }}
               >
@@ -182,7 +182,7 @@ export default function LoginPage() {
                     Sending…
                   </span>
                 ) : (
-                  "Send OTP →"
+                  "Send OTP on WhatsApp →"
                 )}
               </button>
 
@@ -194,19 +194,16 @@ export default function LoginPage() {
             <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4">
               <button
                 type="button"
-                onClick={() => { setStep("email"); setOtp(""); }}
+                onClick={() => { setStep("phone"); setOtp(""); }}
                 className="flex items-center gap-1.5 text-xs mb-1 transition-colors"
                 style={{ color: "var(--cp-muted)" }}
               >
                 <span className="material-symbols-outlined text-sm">arrow_back</span>
-                Change email
+                Change number
               </button>
 
               <div>
-                <label
-                  className="text-[10px] font-black uppercase tracking-widest mb-2 block"
-                  style={{ color: "var(--cp-muted)" }}
-                >
+                <label className="text-[10px] font-black uppercase tracking-widest mb-2 block" style={{ color: "var(--cp-muted)" }}>
                   6-Digit OTP
                 </label>
                 <input

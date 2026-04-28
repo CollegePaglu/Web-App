@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useFeedStore } from "@/store/useFeedStore";
+import { useNotificationStore } from "@/store/useNotificationStore";
 import toast from "react-hot-toast";
 
 export default function Navbar() {
@@ -13,6 +14,22 @@ export default function Navbar() {
   const { setSearchQuery } = useFeedStore();
   const [searchInput, setSearchInput] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  const { unreadCount, fetchUnreadCount } = useNotificationStore();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Poll for notifications every 30 seconds if authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUnreadCount();
+      const intervalId = setInterval(fetchUnreadCount, 30000);
+      return () => clearInterval(intervalId);
+    }
+  }, [isAuthenticated, fetchUnreadCount]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,18 +81,24 @@ export default function Navbar() {
 
       {/* Right side */}
       <div className="flex items-center gap-1 ml-auto">
-        {isAuthenticated ? (
+        {mounted && isAuthenticated ? (
           <>
             {/* Notifications */}
             <Link
               href="/notifications"
-              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
+              className="relative w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
               style={{
                 color: pathname === "/notifications" ? "var(--cp-primary)" : "var(--cp-muted)",
                 background: pathname === "/notifications" ? "var(--cp-primary-10)" : "transparent",
               }}
             >
               <span className="material-symbols-outlined text-xl">notifications</span>
+              {unreadCount > 0 && (
+                <span 
+                  className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full"
+                  style={{ background: "var(--cp-error)", border: "2px solid var(--cp-surface)" }}
+                />
+              )}
             </Link>
 
             {/* Avatar + Dropdown */}

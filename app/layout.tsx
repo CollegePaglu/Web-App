@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/app/context/ThemeContext";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Poppins } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import AuthBootstrap from "@/app/components/AuthBootstrap";
 
@@ -16,9 +16,9 @@ export const metadata: Metadata = {
   },
 };
 
-const font = Plus_Jakarta_Sans({
+const font = Poppins({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
   display: "swap",
 });
 

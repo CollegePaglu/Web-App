@@ -13,6 +13,11 @@ export default function AuthBootstrap() {
     const token = accessToken || localStorage.getItem("cp_access_token");
     if (token && !isAuthenticated) {
       fetchMe();
+    } else if (!token) {
+      // Emergency purge of lingering cookies that might cause Next.js middleware infinite redirect loops
+      if (typeof document !== "undefined" && document.cookie.includes("cp_access_token")) {
+        document.cookie = "cp_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      }
     }
   }, []);
 

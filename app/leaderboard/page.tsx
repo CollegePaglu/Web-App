@@ -1,25 +1,31 @@
 "use client";
+import { useState, useEffect } from "react";
 import MainLayout from "@/app/components/layout/MainLayout";
 import Navbar from "@/app/components/layout/Navbar";
-
-const LEADERBOARD = [
-  { rank: 1, name: "Aryan Singh", username: "aryan_s", xp: 12480, streak: 34, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=aryan", badge: "🥇", college: "IIT Delhi" },
-  { rank: 2, name: "Priya Sharma", username: "priyasharma", xp: 11230, streak: 28, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=priya", badge: "🥈", college: "NIT Trichy" },
-  { rank: 3, name: "Rahul Verma", username: "rahulv", xp: 9870, streak: 21, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=rahul", badge: "🥉", college: "BITS Pilani" },
-  { rank: 4, name: "Nisha Kapoor", username: "nishak", xp: 8650, streak: 19, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=nisha", badge: "⚡", college: "IIT Bombay" },
-  { rank: 5, name: "Dev Malhotra", username: "devmalhotra", xp: 7940, streak: 15, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=dev", badge: "🔥", college: "DTU Delhi" },
-  { rank: 6, name: "Ananya Rao", username: "ananyar", xp: 7210, streak: 12, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ananya", badge: "✨", college: "IIIT Hyderabad" },
-  { rank: 7, name: "Karan Mehta", username: "karanm", xp: 6780, streak: 11, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=karan", badge: "💫", college: "VIT Vellore" },
-  { rank: 8, name: "Sneha Gupta", username: "snehag", xp: 6340, streak: 9, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sneha", badge: "🌟", college: "MNIT Jaipur" },
-  { rank: 9, name: "Rohan Joshi", username: "rohanj", xp: 5920, streak: 8, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=rohan", badge: "💎", college: "SRM Chennai" },
-  { rank: 10, name: "Ishaan Chandra", username: "ishaanc", xp: 5480, streak: 7, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ishaan", badge: "🎯", college: "NSUT Delhi" },
-];
+import { usersApi } from "@/lib/api";
 
 const podiumColors = ["#FACC15", "#9CA3AF", "#C2712A"];
 
 export default function LeaderboardPage() {
-  const top3 = LEADERBOARD.slice(0, 3);
-  const rest = LEADERBOARD.slice(3);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const res = await usersApi.getLeaderboard(50);
+        if (res.data?.success) setLeaderboard(res.data.data);
+      } catch (error) {
+        console.error("Failed to fetch leaderboard", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLeaderboard();
+  }, []);
+
+  const top3 = leaderboard.slice(0, 3);
+  const rest = leaderboard.slice(3);
 
   return (
     <MainLayout>
@@ -31,45 +37,64 @@ export default function LeaderboardPage() {
         </div>
 
         {/* Podium */}
-        <div className="flex items-end justify-center gap-4 mb-8">
-          {[top3[1], top3[0], top3[2]].map((u, i) => {
-            const actualRank = i === 0 ? 2 : i === 1 ? 1 : 3;
-            const heights = ["h-24", "h-32", "h-20"];
-            const color = podiumColors[actualRank - 1];
-            return (
-              <div key={u.username} className="flex flex-col items-center gap-2">
-                <img src={u.avatar} alt={u.name}
-                  className="w-12 h-12 rounded-full border-2"
-                  style={{ borderColor: color }} />
-                <p className="text-xs font-bold text-center" style={{ color: "var(--cp-text)" }}>{u.name.split(" ")[0]}</p>
-                <div className={`w-20 ${heights[i]} rounded-t-2xl flex flex-col items-center justify-center`}
-                  style={{ background: color + "30", border: `2px solid ${color}` }}>
-                  <span className="text-2xl">{u.badge}</span>
-                  <span className="text-xs font-black" style={{ color }}>{u.xp.toLocaleString()}</span>
-                  <span className="text-[10px]" style={{ color: "var(--cp-muted)" }}>XP</span>
+        {!loading && top3.length > 0 && (
+          <div className="flex items-end justify-center gap-4 mb-8">
+            {[top3[1], top3[0], top3[2]].map((u, i) => {
+              if (!u) return <div key={i} className="w-20" />; // empty placeholder for missing ranks
+              const actualRank = i === 0 ? 2 : i === 1 ? 1 : 3;
+              const heights = ["h-24", "h-32", "h-20"];
+              const color = podiumColors[actualRank - 1];
+              return (
+                <div key={u.username || u._id} className="flex flex-col items-center gap-2">
+                  <img src={u.avatar} alt={u.name}
+                    className="w-12 h-12 rounded-full border-2 object-cover"
+                    style={{ borderColor: color, background: "var(--cp-surface-2)" }} />
+                  <p className="text-xs font-bold text-center w-24 truncate" style={{ color: "var(--cp-text)" }}>{u.name.split(" ")[0]}</p>
+                  <div className={`w-20 ${heights[i]} rounded-t-2xl flex flex-col items-center justify-center`}
+                    style={{ background: color + "30", border: `2px solid ${color}` }}>
+                    <span className="text-2xl">{u.badge}</span>
+                    <span className="text-xs font-black" style={{ color }}>{u.xp.toLocaleString()}</span>
+                    <span className="text-[10px]" style={{ color: "var(--cp-muted)" }}>XP</span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Loading / Empty states */}
+        {loading && (
+          <div className="flex justify-center py-10">
+            <div className="w-8 h-8 border-2 rounded-full animate-spin"
+              style={{ borderColor: "var(--cp-border)", borderTopColor: "var(--cp-primary)" }} />
+          </div>
+        )}
+        {!loading && leaderboard.length === 0 && (
+          <div className="text-center py-10" style={{ color: "var(--cp-muted)" }}>
+            <span className="material-symbols-outlined text-4xl mb-2">social_leaderboard</span>
+            <p className="text-sm">Leaderboard is empty. Be the first to earn XP!</p>
+          </div>
+        )}
 
         {/* Rest of list */}
-        <div className="flex flex-col gap-2">
-          {rest.map((u) => (
-            <div key={u.username} className="cp-card p-4 flex items-center gap-4">
-              <span className="text-sm font-black w-6 text-center" style={{ color: "var(--cp-muted)" }}>{u.rank}</span>
-              <img src={u.avatar} alt={u.name} className="w-10 h-10 rounded-full" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold" style={{ color: "var(--cp-text)" }}>{u.name}</p>
-                <p className="text-[10px]" style={{ color: "var(--cp-muted)" }}>{u.college}</p>
+        {!loading && rest.length > 0 && (
+          <div className="flex flex-col gap-2">
+            {rest.map((u) => (
+              <div key={u.username || u._id} className="cp-card p-4 flex items-center gap-4">
+                <span className="text-sm font-black w-6 text-center" style={{ color: "var(--cp-muted)" }}>{u.rank}</span>
+                <img src={u.avatar} alt={u.name} className="w-10 h-10 rounded-full object-cover" style={{ background: "var(--cp-surface-2)" }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold truncate" style={{ color: "var(--cp-text)" }}>{u.name}</p>
+                  <p className="text-[10px] truncate" style={{ color: "var(--cp-muted)" }}>{u.college}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-black" style={{ color: "var(--cp-primary)" }}>{u.xp.toLocaleString()} XP</p>
+                  <p className="text-[10px]" style={{ color: "var(--cp-muted)" }}>🔥 {u.streak} day streak</p>
+                </div>
               </div>
-              <div className="text-right shrink-0">
-                <p className="text-sm font-black" style={{ color: "var(--cp-primary)" }}>{u.xp.toLocaleString()} XP</p>
-                <p className="text-[10px]" style={{ color: "var(--cp-muted)" }}>🔥 {u.streak} day streak</p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </MainLayout>
   );

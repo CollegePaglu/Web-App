@@ -33,6 +33,9 @@ api.interceptors.response.use(
         const newToken = data.data?.accessToken;
         if (newToken) {
           localStorage.setItem("cp_access_token", newToken);
+          if (typeof document !== 'undefined') {
+            document.cookie = `cp_access_token=${newToken}; path=/; max-age=86400; SameSite=Lax`;
+          }
           original.headers.Authorization = `Bearer ${newToken}`;
           return api(original);
         }
@@ -46,21 +49,23 @@ api.interceptors.response.use(
   }
 );
 
-// ── Auth ────────────────────────────────────────────────────────────────────
+// ── Auth ─────────────────────────────────────────────────────────────────────
 export const authApi = {
-  sendOtp: (email: string) => api.post("/auth/otp/send", { email }),
-  verifyOtp: (email: string, otp: string) =>
-    api.post("/auth/otp/verify", { email, otp }),
+  // Phone-based OTP via MSG91 WhatsApp
+  sendOtp: (phone: string) => api.post("/auth/otp/send", { phone }),
+  verifyOtp: (phone: string, otp: string) =>
+    api.post("/auth/otp/verify", { phone, otp }),
   logout: () => api.post("/auth/logout"),
   refresh: (refreshToken: string) =>
     api.post("/auth/refresh", { refreshToken }),
 };
 
-// ── Users ───────────────────────────────────────────────────────────────────
+// ── Users ────────────────────────────────────────────────────────────────────
 export const usersApi = {
   getMe: () => api.get("/users/me"),
   updateProfile: (data: Record<string, unknown>) => api.patch("/users/me", data),
   completeProfile: (data: Record<string, unknown>) => api.post("/users/me/complete", data),
+  setUsername: (username: string) => api.patch("/users/me/username", { username }),
   uploadAvatar: (file: File) => {
     const fd = new FormData();
     fd.append("avatar", file);
@@ -72,17 +77,23 @@ export const usersApi = {
   searchUsers: (q: string, page = 1) =>
     api.get(`/users/search?q=${encodeURIComponent(q)}&page=${page}`),
   getStatus: () => api.get("/users/me/status"),
+  getLeaderboard: (limit = 20) => api.get(`/users/leaderboard?limit=${limit}`),
 };
 
-// ── Community / Posts ────────────────────────────────────────────────────────
+// ── Community / Posts ─────────────────────────────────────────────────────────
 export const postsApi = {
   getFeed: (params?: {
     page?: number;
     limit?: number;
     sortBy?: "recent" | "trending" | "top";
     type?: string;
+    category?: string;
     search?: string;
+    authorType?: string;
+    includeUpdates?: string;
   }) => api.get("/community/posts", { params }),
+
+  getTrendingTags: (limit = 5) => api.get("/community/posts/trending/tags", { params: { limit } }),
 
   getPost: (id: string) => api.get(`/community/posts/${id}`),
 
@@ -115,7 +126,7 @@ export const postsApi = {
   },
 };
 
-// ── Follow ───────────────────────────────────────────────────────────────────
+// ── Follow ────────────────────────────────────────────────────────────────────
 export const followApi = {
   follow: (userId: string) => api.post(`/users/${userId}/follow`),
   unfollow: (userId: string) => api.delete(`/users/${userId}/follow`),
@@ -125,9 +136,14 @@ export const followApi = {
     api.get(`/users/${userId}/following?page=${page}`),
 };
 
-// ── Colleges ─────────────────────────────────────────────────────────────────
+// ── Colleges ──────────────────────────────────────────────────────────────────
 export const collegesApi = {
   list: () => api.get("/colleges"),
+};
+
+// ── Events ────────────────────────────────────────────────────────────────────
+export const eventsApi = {
+  getEvents: (params?: { page?: number; limit?: number }) => api.get("/community/events", { params }),
 };
 
 export default api;

@@ -23,9 +23,12 @@ export interface Post {
   content: string;
   title?: string;
   type: "text" | "image" | "video" | "poll" | "link" | "update";
+  category?: "GOSSIPS" | "CONFESSIONS" | "MEMES" | "GENERAL" | string;
   author?: PostAuthor;
   isAnonymous: boolean;
   media?: PostMedia[];
+  images?: string[];
+  videoUrl?: string;
   upvotes: number;
   downvotes: number;
   commentsCount: number;
@@ -173,13 +176,15 @@ interface FeedState {
   currentPage: number;
   sortBy: "recent" | "trending" | "top";
   filterType: string;
+  filterCategory: string;
   searchQuery: string;
   usingDemoData: boolean;
 
-  fetchFeed: (reset?: boolean) => Promise<void>;
+  fetchFeed: (reset?: boolean, categoryOverride?: string) => Promise<void>;
   loadMore: () => Promise<void>;
   setSortBy: (sort: "recent" | "trending" | "top") => void;
   setFilterType: (type: string) => void;
+  setFilterCategory: (category: string) => void;
   setSearchQuery: (q: string) => void;
   addPost: (post: Post) => void;
   removePost: (id: string) => void;
@@ -213,11 +218,13 @@ export const useFeedStore = create<FeedState>((set, get) => ({
   currentPage: 1,
   sortBy: "recent",
   filterType: "",
+  filterCategory: "",
   searchQuery: "",
   usingDemoData: false,
 
-  fetchFeed: async (reset = true) => {
-    const { sortBy, filterType, searchQuery } = get();
+  fetchFeed: async (reset = true, categoryOverride?: string) => {
+    const { sortBy, filterType, searchQuery, filterCategory } = get();
+    const category = categoryOverride !== undefined ? categoryOverride : filterCategory;
     set({ isLoading: reset, isLoadingMore: !reset });
     try {
       const { data } = await postsApi.getFeed({
@@ -225,6 +232,7 @@ export const useFeedStore = create<FeedState>((set, get) => ({
         limit: 10,
         sortBy,
         type: filterType || undefined,
+        category: category || undefined,
         search: searchQuery || undefined,
       });
       const posts: Post[] = data.data || [];
@@ -270,6 +278,11 @@ export const useFeedStore = create<FeedState>((set, get) => ({
 
   setFilterType: (filterType) => {
     set({ filterType, currentPage: 1 });
+    get().fetchFeed(true);
+  },
+
+  setFilterCategory: (filterCategory) => {
+    set({ filterCategory, currentPage: 1 });
     get().fetchFeed(true);
   },
 

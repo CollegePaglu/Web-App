@@ -1,142 +1,248 @@
 "use client";
-import { useEffect, useRef, useCallback } from "react";
-import { useFeedStore } from "@/store/useFeedStore";
+import { useState, useEffect, useRef, useCallback } from "react";
 import PostCard from "./PostCard";
-import ConfessionCard from "./ConfessionCard";
-import EventCard from "./EventCard";
+import { useAuthStore } from "@/store/useAuthStore";
+import { postsApi } from "@/lib/api";
+import { Post, DEMO_POSTS } from "@/store/useFeedStore";
 
-const SORT_OPTIONS = [
-  { value: "recent" as const, label: "Recent", icon: "schedule" },
-  { value: "trending" as const, label: "Trending", icon: "local_fire_department" },
-  { value: "top" as const, label: "Top", icon: "trending_up" },
-];
+interface Props {
+  category?: string;
+  authorType?: string;
+}
 
-const TYPE_FILTERS = [
-  { value: "", label: "All" },
-  { value: "text", label: "Text" },
-  { value: "image", label: "Image" },
-  { value: "poll", label: "Poll" },
-  { value: "update", label: "Updates" },
-];
+const LIMIT = 10;
 
-export default function FeedList() {
-  const {
-    posts, isLoading, isLoadingMore, pagination,
-    sortBy, filterType, fetchFeed, loadMore, setSortBy, setFilterType,
-  } = useFeedStore();
-
+export default function FeedList({ category, authorType }: Props) {
+  const { isAuthenticated } = useAuthStore();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(1);
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const loadingIndicatorRef = useRef<HTMLDivElement>(null);
 
+  // ── Fetch a single page of posts ────────────────────────────────────────
+  const fetchPage = useCallback(async (pageNum: number, reset: boolean) => {
+    try {
+      const { data } = await postsApi.getFeed({
+        page: pageNum,
+        limit: LIMIT,
+        sortBy: "recent",
+        category: category || undefined,
+        authorType: authorType || undefined,
+        // Society posts may be posted as 'updates' visibility — include them
+        ...(authorType ? { includeUpdates: "true" } : {}),
+      });
+
+      const incoming: Post[] = data.data || [];
+      const pagination = data.pagination;
+
+      if (incoming.length === 0 && reset) {
+        // Fallback demo data — filter by category if provided
+        let demos = DEMO_POSTS;
+        if (category) demos = demos.filter((p) => p.category === category);
+        // We do not have authorType in DEMO_POSTS, so just don't filter or show empty if needed.
+        if (authorType) demos = []; 
+        
+        setPosts(demos);
+        setHasMore(false);
+      } else {
+        setPosts((prev) => (reset ? incoming : [...prev, ...incoming]));
+        setHasMore(pagination?.hasNext ?? false);
+        setPage(pageNum);
+      }
+    } catch {
+      if (reset) {
+        let demos = DEMO_POSTS;
+        if (category) demos = demos.filter((p) => p.category === category);
+        if (authorType) demos = [];
+        setPosts(demos);
+        setHasMore(false);
+      }
+    }
+  }, [category, authorType]);
+
+  // ── Initial load + refresh when category changes ─────────────────────────
   useEffect(() => {
-    fetchFeed(true);
+    setIsLoading(true);
+    setPosts([]);
+    setPage(1);
+    fetchPage(1, true).then(() => {
+      // Prepend any posts created while on a different route (sessionStorage cache)
+      try {
+        const EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+        const pending: Array<{ post: Post; ts: number }> = JSON.parse(
+          sessionStorage.getItem("pendingPosts") || "[]"
+        ).filter((item: { post: Post; ts: number }) => Date.now() - item.ts < EXPIRY_MS);
+        
+        const matching = pending
+          .filter(({ post }) => !category || post.category === category)
+          .map(({ post }) => post);
+          
+        if (matching.length > 0) {
+          setPosts((prev) => {
+            // Avoid duplicates if backend already returned them
+            const existingIds = new Set(prev.map((p) => p._id));
+            const fresh = matching.filter((p) => !existingIds.has(p._id));
+            return fresh.length > 0 ? [
+              ...fresh,
+              ...prev.filter((p) => !p._id.startsWith("demo_"))
+            ] : prev;
+          });
+        }
+      } catch {}
+    }).finally(() => setIsLoading(false));
+  }, [category, fetchPage]);
+
+  // ── Listen for new posts from CreatePostModal ────────────────────────────
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { post } = (e as CustomEvent).detail as { post: Post };
+      // Add to this feed if category matches or this is the home feed
+      if (!category || post.category === category) {
+        setPosts((prev) => [post, ...prev.filter((p) => !p._id.startsWith("demo_"))]);
+      }
+    };
+    window.addEventListener("post-created", handler);
+    return () => window.removeEventListener("post-created", handler);
+  }, [category]);
+
+  // ── Listen for post deletions ─────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { id } = (e as CustomEvent).detail as { id: string };
+      setPosts((prev) => prev.filter((p) => p._id !== id));
+    };
+    window.addEventListener("post-deleted", handler);
+    return () => window.removeEventListener("post-deleted", handler);
   }, []);
 
-  // Infinite scroll
-  const setupObserver = useCallback(() => {
-    if (observerRef.current) observerRef.current.disconnect();
-    observerRef.current = new IntersectionObserver(
-      (entries) => { if (entries[0].isIntersecting) loadMore(); },
-      { threshold: 0.1 }
-    );
-    if (loadMoreRef.current) observerRef.current.observe(loadMoreRef.current);
-  }, [loadMore]);
+  // ── Listen for vote updates ───────────────────────────────────────────
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { id, upvotes, downvotes, userVote } = (e as CustomEvent).detail;
+      setPosts((prev) =>
+        prev.map((p) => (p._id === id ? { ...p, upvotes, downvotes, userVote } : p))
+      );
+    };
+    window.addEventListener("post-voted", handler);
+    return () => window.removeEventListener("post-voted", handler);
+  }, []);
+
+  // ── Listen for comment count updates ─────────────────────────────────
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { id, delta } = (e as CustomEvent).detail;
+      setPosts((prev) =>
+        prev.map((p) => (p._id === id ? { ...p, commentsCount: (p.commentsCount || 0) + delta } : p))
+      );
+    };
+    window.addEventListener("post-commented", handler);
+    return () => window.removeEventListener("post-commented", handler);
+  }, []);
+
+  // ── Infinite scroll ───────────────────────────────────────────────────
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    await fetchPage(page + 1, false);
+    setIsLoadingMore(false);
+  }, [isLoadingMore, hasMore, page, fetchPage]);
 
   useEffect(() => {
-    setupObserver();
-    return () => observerRef.current?.disconnect();
-  }, [setupObserver, posts.length]);
+    if (isLoading) return;
+    if (observerRef.current) observerRef.current.disconnect();
+    observerRef.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore) loadMore();
+    });
+    if (loadingIndicatorRef.current) observerRef.current.observe(loadingIndicatorRef.current);
+    return () => { if (observerRef.current) observerRef.current.disconnect(); };
+  }, [isLoading, hasMore, loadMore]);
 
-  return (
-    <div className="flex flex-col gap-0">
-      {/* Controls — single scrollable row */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 scrollbar-hide">
-        {/* Sort group */}
-        {SORT_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => setSortBy(opt.value)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-bold transition-all shrink-0"
-            style={{
-              background: sortBy === opt.value ? "var(--cp-primary)" : "var(--cp-surface)",
-              color: sortBy === opt.value ? "#fff" : "var(--cp-muted)",
-              border: `1px solid ${sortBy === opt.value ? "var(--cp-primary)" : "var(--cp-border)"}`,
-            }}
-          >
-            <span className="material-symbols-outlined text-sm">{opt.icon}</span>
-            {opt.label}
-          </button>
-        ))}
-
-        {/* Divider */}
-        <div className="w-px h-5 shrink-0" style={{ background: "var(--cp-border)" }} />
-
-        {/* Filter group */}
-        {TYPE_FILTERS.map((f) => (
-          <button
-            key={f.value}
-            onClick={() => setFilterType(f.value)}
-            className="px-3 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all shrink-0"
-            style={{
-              background: filterType === f.value ? "var(--cp-primary-10)" : "transparent",
-              color: filterType === f.value ? "var(--cp-primary)" : "var(--cp-muted)",
-              border: `1px solid ${filterType === f.value ? "var(--cp-primary)" : "var(--cp-border)"}`,
-            }}
-          >
-            {f.label}
-          </button>
+  // ── Skeleton loader ───────────────────────────────────────────────────
+  if (isLoading && posts.length === 0) {
+    return (
+      <div className="flex flex-col gap-4 pb-20 w-full max-w-[600px] mx-auto px-4 lg:px-0 mt-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="rounded-3xl p-5 animate-pulse" style={{ background: "var(--cp-surface)" }}>
+            <div className="flex gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full" style={{ background: "var(--cp-surface-2)" }} />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 rounded-full w-1/3" style={{ background: "var(--cp-surface-2)" }} />
+                <div className="h-2 rounded-full w-1/4" style={{ background: "var(--cp-surface-2)" }} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-3 rounded-full w-full" style={{ background: "var(--cp-surface-2)" }} />
+              <div className="h-3 rounded-full w-4/5" style={{ background: "var(--cp-surface-2)" }} />
+            </div>
+          </div>
         ))}
       </div>
+    );
+  }
 
+  return (
+    <div className="flex flex-col gap-4 pb-20 w-full max-w-[600px] mx-auto px-4 lg:px-0">
+      {/* CreatePost inline prompt */}
+      {isAuthenticated && (
+        <div
+          className="mt-4 px-5 py-4 rounded-[2rem] flex items-center gap-4 cursor-pointer transition-all hover:scale-[1.02] hover:shadow-md active:scale-95 group"
+          style={{ background: "var(--cp-surface)", border: "2px solid var(--cp-border)" }}
+          onClick={() => {
+            const fab = document.getElementById("fab-create-post");
+            if (fab) fab.click();
+          }}
+        >
+          <div
+            className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-lg shadow-sm group-hover:rotate-12 transition-transform duration-300"
+            style={{ background: "var(--cp-primary-10)", color: "var(--cp-primary)" }}
+          >
+            ✏️
+          </div>
+          <span className="text-base font-bold flex-1" style={{ color: "var(--cp-text)" }}>
+            {category === "GOSSIPS"     ? "Drop some gossip… ☕"
+            : category === "CONFESSIONS" ? "Confess anonymously… 🤫"
+            : category === "MEMES"       ? "Share a meme 😂"
+            : "What's happening on campus? ✨"}
+          </span>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center transition-colors" style={{ background: "var(--cp-surface-2)", color: "var(--cp-primary)" }}>
+            <span className="material-symbols-outlined text-sm font-black">arrow_forward</span>
+          </div>
+        </div>
+      )}
 
-      {/* Loading skeleton */}
-      {isLoading && (
+      {posts.length === 0 && !isLoading ? (
+        <div className="p-12 text-center rounded-3xl mt-8" style={{ background: "var(--cp-surface)", border: "1px solid var(--cp-border)" }}>
+          <div className="text-5xl mb-4">
+            {category === "GOSSIPS" ? "🗣️" : category === "CONFESSIONS" ? "🤫" : category === "MEMES" ? "😂" : "📭"}
+          </div>
+          <h3 className="font-bold text-lg mb-2" style={{ color: "var(--cp-text)" }}>Nothing here… yet!</h3>
+          <p className="text-sm" style={{ color: "var(--cp-muted)" }}>
+            Be the first to post in {category ? category.charAt(0) + category.slice(1).toLowerCase() : "this section"}!
+          </p>
+        </div>
+      ) : (
         <div className="flex flex-col gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="cp-card p-5 animate-pulse">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full" style={{ background: "var(--cp-surface-2)" }} />
-                <div className="flex flex-col gap-2">
-                  <div className="w-28 h-3 rounded-full" style={{ background: "var(--cp-surface-2)" }} />
-                  <div className="w-16 h-2 rounded-full" style={{ background: "var(--cp-surface-2)" }} />
-                </div>
-              </div>
-              <div className="w-full h-3 rounded-full mb-2" style={{ background: "var(--cp-surface-2)" }} />
-              <div className="w-3/4 h-3 rounded-full mb-2" style={{ background: "var(--cp-surface-2)" }} />
-              <div className="w-1/2 h-3 rounded-full" style={{ background: "var(--cp-surface-2)" }} />
-            </div>
+          {posts.map((post) => (
+            <PostCard key={post._id} post={post} />
           ))}
         </div>
       )}
 
-      {/* Posts */}
-      {!isLoading && (
-        <div className="flex flex-col gap-4">
-          {posts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20"
-              style={{ color: "var(--cp-muted)" }}>
-              <span className="material-symbols-outlined text-6xl mb-4 opacity-30">feed</span>
-              <p className="text-base font-bold mb-1">No posts yet</p>
-              <p className="text-sm opacity-70">Be the first to post something!</p>
-            </div>
-          ) : (
-            posts.map((post) => {
-              if (post.isAnonymous) return <ConfessionCard key={post._id} post={post} />;
-              if (post.type === "update") return <EventCard key={post._id} post={post} />;
-              return <PostCard key={post._id} post={post} />;
-            })
-          )}
-        </div>
-      )}
-
-      {/* Infinite scroll trigger */}
-      <div ref={loadMoreRef} className="h-8 flex items-center justify-center mt-4">
+      {/* Infinite Scroll Indicator */}
+      <div ref={loadingIndicatorRef} className="py-8 flex justify-center">
         {isLoadingMore && (
-          <div className="w-6 h-6 border-2 rounded-full animate-spin"
-            style={{ borderColor: "var(--cp-border)", borderTopColor: "var(--cp-primary)" }} />
+          <div className="flex items-center gap-2 text-sm font-bold" style={{ color: "var(--cp-muted)" }}>
+            <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            Loading more…
+          </div>
         )}
-        {!isLoadingMore && pagination && !pagination.hasNext && posts.length > 0 && (
-          <p className="text-xs" style={{ color: "var(--cp-muted)" }}>You've seen it all ✨</p>
+        {!hasMore && posts.length > 0 && (
+          <p className="text-xs font-bold text-center" style={{ color: "var(--cp-muted)" }}>
+            You've reached the end! 🎉
+          </p>
         )}
       </div>
     </div>

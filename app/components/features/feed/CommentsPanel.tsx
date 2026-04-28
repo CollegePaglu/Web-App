@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { postsApi } from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useFeedStore } from "@/store/useFeedStore";
 import toast from "react-hot-toast";
 
 interface Comment {
@@ -23,11 +22,10 @@ function timeAgo(d: string) {
   return `${Math.floor(h / 24)}d`;
 }
 
-interface Props { postId: string; onClose: () => void; }
+interface Props { postId: string; onClose: () => void; updateCommentCount?: (delta: number) => void; }
 
-export default function CommentsPanel({ postId, onClose }: Props) {
+export default function CommentsPanel({ postId, onClose, updateCommentCount }: Props) {
   const { isAuthenticated } = useAuthStore();
-  const { updatePostCommentCount } = useFeedStore();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState("");
@@ -36,6 +34,19 @@ export default function CommentsPanel({ postId, onClose }: Props) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    if (postId.startsWith("demo_")) {
+      setComments([
+        {
+          _id: "demo_c1",
+          content: "This is a demo comment! You can't fetch real comments for a demo post.",
+          isAnonymous: false,
+          createdAt: new Date().toISOString(),
+          author: { _id: "demo_user", displayName: "System", username: "system" }
+        }
+      ]);
+      setLoading(false);
+      return;
+    }
     postsApi.getComments(postId).then(({ data }) => {
       setComments(data.data || []);
     }).catch(() => {}).finally(() => setLoading(false));
@@ -46,10 +57,27 @@ export default function CommentsPanel({ postId, onClose }: Props) {
     if (!content.trim()) return;
     if (!isAuthenticated) { toast.error("Login to comment"); return; }
     setSubmitting(true);
+    
+    if (postId.startsWith("demo_")) {
+      const newComment: Comment = {
+        _id: `demo_c_${Date.now()}`,
+        content: content.trim(),
+        isAnonymous,
+        createdAt: new Date().toISOString(),
+        author: isAnonymous ? undefined : { _id: "me", displayName: "You", username: "you" }
+      };
+      setComments((c) => [newComment, ...c]);
+      updateCommentCount?.(1);
+      setContent("");
+      toast.success("Comment added!");
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const { data } = await postsApi.addComment(postId, content.trim(), isAnonymous);
       setComments((c) => [data.data, ...c]);
-      updatePostCommentCount(postId, 1);
+      updateCommentCount?.(1);
       setContent("");
       toast.success("Comment added!");
     } catch (err: any) {

@@ -1,10 +1,11 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 /* ─── Tailwind v4 theme tokens ─────────────────────────────────────────────── */
 @theme {
-  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-sans: 'Poppins', sans-serif;
 
   --radius-sm:   0.5rem;
   --radius-md:   1rem;
@@ -12,52 +13,54 @@
   --radius-xl:   2rem;
   --radius-full: 9999px;
 
-  /* Light mode color tokens — these become bg-cp-primary, text-cp-text etc. */
-  --color-cp-primary:  #3FAF9F;
-  --color-cp-bg:       #F8FAFB;
-  --color-cp-text:     #1E1E1E;
-  --color-cp-muted:    #6B7280;
-  --color-cp-accent:   #FACC15;
-  --color-cp-blue:     #60A5FA;
+  /* AppV1 Green & Beige Theme — light mode tokens */
+  --color-cp-primary:  #1B9D6B;
+  --color-cp-bg:       #f8f6f3;
+  --color-cp-text:     #1C1917;
+  --color-cp-muted:    #57534E;
+  --color-cp-accent:   #F59E0B;
+  --color-cp-blue:     #3B82F6;
   --color-cp-success:  #22C55E;
   --color-cp-error:    #EF4444;
-  --color-cp-surface:  #FFFFFF;
-  --color-cp-surface2: #F0F4F5;
+  --color-cp-surface:  #fcfdfb;
+  --color-cp-surface2: #f0ede8;
 }
 
 /* ─── Raw CSS variables (for inline styles & dynamic dark swap) ─────────────── */
+/* AppV1 Green & Beige Theme — light mode */
 :root {
-  --cp-primary:       #3FAF9F;
-  --cp-bg:            #F8FAFB;
-  --cp-text:          #1E1E1E;
-  --cp-muted:         #6B7280;
-  --cp-accent:        #FACC15;
-  --cp-blue:          #60A5FA;
+  --cp-primary:       #1B9D6B;
+  --cp-bg:            #f8f6f3;
+  --cp-text:          #1C1917;
+  --cp-muted:         #57534E;
+  --cp-accent:        #F59E0B;
+  --cp-blue:          #3B82F6;
   --cp-success:       #22C55E;
   --cp-error:         #EF4444;
-  --cp-surface:       #FFFFFF;
-  --cp-surface-2:     #F0F4F5;
-  --cp-border:        rgba(0, 0, 0, 0.08);
-  --cp-border-strong: rgba(0, 0, 0, 0.15);
-  --cp-primary-10:    rgba(63, 175, 159, 0.10);
-  --cp-primary-20:    rgba(63, 175, 159, 0.20);
+  --cp-surface:       #fcfdfb;
+  --cp-surface-2:     #f0ede8;
+  --cp-border:        rgba(28, 25, 23, 0.08);
+  --cp-border-strong: rgba(28, 25, 23, 0.15);
+  --cp-primary-10:    rgba(27, 157, 107, 0.10);
+  --cp-primary-20:    rgba(27, 157, 107, 0.20);
 }
 
+/* AppV1 Dark Mode — OLED black */
 .dark {
-  --cp-primary:       #4FD1C5;
-  --cp-bg:            #0F172A;
-  --cp-text:          #E5E7EB;
-  --cp-muted:         #9CA3AF;
-  --cp-accent:        #FCD34D;
-  --cp-blue:          #60A5FA;
+  --cp-primary:       #1B9D6B;
+  --cp-bg:            #000000;
+  --cp-text:          #FFFFFF;
+  --cp-muted:         #A3A3A3;
+  --cp-accent:        #FBBF24;
+  --cp-blue:          #3B82F6;
   --cp-success:       #22C55E;
   --cp-error:         #F87171;
-  --cp-surface:       #1E2D3D;
-  --cp-surface-2:     #162032;
+  --cp-surface:       #121212;
+  --cp-surface-2:     #1E1E1E;
   --cp-border:        rgba(255, 255, 255, 0.08);
   --cp-border-strong: rgba(255, 255, 255, 0.15);
-  --cp-primary-10:    rgba(79, 209, 197, 0.10);
-  --cp-primary-20:    rgba(79, 209, 197, 0.20);
+  --cp-primary-10:    rgba(27, 157, 107, 0.15);
+  --cp-primary-20:    rgba(27, 157, 107, 0.25);
 }
 
 /* ─── Base ──────────────────────────────────────────────────────────────────── */
@@ -106,7 +109,7 @@ html { scroll-behavior: smooth; }
 .animate-fade-in-up { animation: fadeInUp 0.3s ease both; }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(63, 175, 159, 0.4); }
-  50%       { box-shadow: 0 0 0 8px rgba(63, 175, 159, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(27, 157, 107, 0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(27, 157, 107, 0); }
 }
 .animate-pulse-glow { animation: pulse-glow 2s ease infinite; }

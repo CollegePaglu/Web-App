@@ -6,16 +6,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-// Placeholder — real notifications module not exposed via REST in backend
-// We'll poll /community/posts and show "new posts" alerts
-interface Notif {
-  _id: string;
-  type: "like" | "comment" | "follow" | "mention" | "system";
-  message: string;
-  isRead: boolean;
-  createdAt: string;
-  referenceId?: string;
-}
+import { useNotificationStore } from "@/store/useNotificationStore";
 
 function timeAgo(d: string) {
   const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
@@ -27,46 +18,36 @@ function timeAgo(d: string) {
 }
 
 const NOTIF_ICONS: Record<string, string> = {
-  like: "thumb_up",
-  comment: "chat_bubble",
-  follow: "person_add",
-  mention: "alternate_email",
-  system: "notifications",
+  LIKE: "thumb_up",
+  COMMENT: "chat_bubble",
+  FOLLOW: "person_add",
+  SYSTEM: "notifications",
 };
 
 const NOTIF_COLORS: Record<string, string> = {
-  like: "var(--cp-accent)",
-  comment: "var(--cp-blue)",
-  follow: "var(--cp-primary)",
-  mention: "var(--cp-success)",
-  system: "var(--cp-muted)",
+  LIKE: "var(--cp-accent)",
+  COMMENT: "var(--cp-blue)",
+  FOLLOW: "var(--cp-primary)",
+  SYSTEM: "var(--cp-muted)",
 };
-
-// Mock notifications (replace with real API when backend exposes endpoint)
-const MOCK_NOTIFS: Notif[] = [
-  { _id: "1", type: "like", message: "Riya liked your post", isRead: false, createdAt: new Date(Date.now() - 300000).toISOString() },
-  { _id: "2", type: "comment", message: "Arjun commented: \"lmaooo same 💀\"", isRead: false, createdAt: new Date(Date.now() - 900000).toISOString() },
-  { _id: "3", type: "follow", message: "Priya started following you", isRead: true, createdAt: new Date(Date.now() - 3600000).toISOString() },
-  { _id: "4", type: "system", message: "Welcome to College Paglu! 🎉", isRead: true, createdAt: new Date(Date.now() - 86400000).toISOString() },
-];
 
 export default function NotificationsPage() {
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
-  const [notifs, setNotifs] = useState<Notif[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  const { 
+    notifications, 
+    isLoading, 
+    fetchNotifications, 
+    markAsRead, 
+    markAllAsRead, 
+    unreadCount 
+  } = useNotificationStore();
 
   useEffect(() => {
     if (!isAuthenticated) { router.push("/login"); return; }
-    // Simulate API call
-    setTimeout(() => {
-      setNotifs(MOCK_NOTIFS);
-      setLoading(false);
-    }, 500);
-  }, [isAuthenticated]);
-
-  const markAllRead = () => setNotifs((n) => n.map((x) => ({ ...x, isRead: true })));
-  const unreadCount = notifs.filter((n) => !n.isRead).length;
+    fetchNotifications(true);
+  }, [isAuthenticated, fetchNotifications]);
 
   return (
     <MainLayout>
@@ -80,7 +61,7 @@ export default function NotificationsPage() {
             )}
           </div>
           {unreadCount > 0 && (
-            <button onClick={markAllRead}
+            <button onClick={markAllAsRead}
               className="text-xs font-semibold px-3 py-1.5 rounded-xl"
               style={{ color: "var(--cp-primary)", background: "var(--cp-primary-10)" }}>
               Mark all read
@@ -88,7 +69,7 @@ export default function NotificationsPage() {
           )}
         </div>
 
-        {loading ? (
+        {isLoading && notifications.length === 0 ? (
           <div className="flex flex-col gap-3">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="cp-card p-4 flex items-center gap-3 animate-pulse">
@@ -100,7 +81,7 @@ export default function NotificationsPage() {
               </div>
             ))}
           </div>
-        ) : notifs.length === 0 ? (
+        ) : notifications.length === 0 ? (
           <div className="text-center py-20" style={{ color: "var(--cp-muted)" }}>
             <span className="material-symbols-outlined text-6xl block mb-3 opacity-30">notifications_none</span>
             <p className="text-base font-bold">All caught up!</p>
@@ -108,20 +89,20 @@ export default function NotificationsPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {notifs.map((n) => (
+            {notifications.map((n) => (
               <div key={n._id}
                 className="cp-card p-4 flex items-center gap-4 transition-all cursor-pointer hover:opacity-90"
                 style={{
                   background: n.isRead ? "var(--cp-surface)" : "var(--cp-primary-10)",
                   borderLeft: n.isRead ? undefined : `3px solid var(--cp-primary)`,
                 }}
-                onClick={() => setNotifs((arr) => arr.map((x) => x._id === n._id ? { ...x, isRead: true } : x))}
+                onClick={() => !n.isRead && markAsRead(n._id)}
               >
                 {/* Icon */}
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                  style={{ background: NOTIF_COLORS[n.type] + "20" }}>
-                  <span className="material-symbols-outlined text-lg" style={{ color: NOTIF_COLORS[n.type] }}>
-                    {NOTIF_ICONS[n.type]}
+                  style={{ background: (NOTIF_COLORS[n.type] || NOTIF_COLORS.SYSTEM) + "20" }}>
+                  <span className="material-symbols-outlined text-lg" style={{ color: NOTIF_COLORS[n.type] || NOTIF_COLORS.SYSTEM }}>
+                    {NOTIF_ICONS[n.type] || NOTIF_ICONS.SYSTEM}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
