@@ -76,7 +76,7 @@ export default function SideBar() {
         <div className="flex flex-col h-full py-5 px-3 overflow-y-auto scrollbar-hide">
           {/* Brand */}
           <div className="flex items-center gap-3 px-3 mb-6">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0" style={{ background: "var(--cp-primary)", color: "#fff" }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0" style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}>
               CP
             </div>
             <div>
@@ -128,7 +128,7 @@ export default function SideBar() {
               <Link
                 href="/login"
                 className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 w-full"
-                style={{ background: "var(--cp-primary)", color: "#fff" }}
+                style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}
               >
                 <span className="material-symbols-outlined text-lg">login</span>
                 Login

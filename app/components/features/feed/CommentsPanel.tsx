@@ -169,7 +169,7 @@ export default function CommentsPanel({ postId, onClose, updateCommentCount }: P
                 onClick={handleSubmit}
                 disabled={submitting || !content.trim()}
                 className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:opacity-90 active:scale-95 disabled:opacity-40 shrink-0"
-                style={{ background: "var(--cp-primary)", color: "#fff" }}
+                style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}
               >
                 {submitting
                   ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

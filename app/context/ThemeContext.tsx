@@ -14,13 +14,12 @@ const ThemeContext = createContext<ThemeContextType>({
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
     const stored = localStorage.getItem("cp-theme") as Theme | null;
-    if (stored) setTheme(stored);
-    else if (window.matchMedia("(prefers-color-scheme: dark)").matches)
-      setTheme("dark");
+    // Default to dark (matches AppV1 — always dark OLED theme)
+    setTheme(stored ?? "dark");
   }, []);
 
   useEffect(() => {

@@ -131,7 +131,7 @@ export default function ProfilePage() {
           <p className="text-base font-bold">User not found</p>
           <button onClick={() => router.back()}
             className="px-5 py-2 rounded-xl font-bold text-sm"
-            style={{ background: "var(--cp-primary)", color: "#fff" }}>
+            style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}>
             Go Back
           </button>
         </div>

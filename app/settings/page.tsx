@@ -85,7 +85,7 @@ function ProfileSection() {
           </div>
           <button type="button" onClick={() => fileRef.current?.click()}
             className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center shadow-lg"
-            style={{ background: "var(--cp-primary)", color: "#fff" }}>
+            style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}>
             <span className="material-symbols-outlined text-sm">photo_camera</span>
           </button>
         </div>
@@ -95,7 +95,7 @@ function ProfileSection() {
           {avatarFile && (
             <button type="button" onClick={handleAvatarUpload} disabled={avatarUploading}
               className="text-xs px-3 py-1.5 rounded-lg font-bold disabled:opacity-50"
-              style={{ background: "var(--cp-primary)", color: "#fff" }}>
+              style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}>
               {avatarUploading ? "Uploading…" : "Upload photo"}
             </button>
           )}
@@ -191,7 +191,7 @@ function AccountSection() {
           </div>
           <button onClick={handleSaveUsername} disabled={saving || !username}
             className="px-4 py-3 rounded-xl font-bold text-sm disabled:opacity-50"
-            style={{ background: "var(--cp-primary)", color: "#fff" }}>
+            style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}>
             {saving ? "…" : "Save"}
           </button>
         </div>
@@ -263,7 +263,7 @@ function AppearanceSection() {
               <span className="text-[10px] opacity-70 font-normal">{t.desc}</span>
               {isActive && (
                 <span className="w-5 h-5 rounded-full flex items-center justify-center"
-                  style={{ background: "var(--cp-primary)", color: "#fff" }}>
+                  style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}>
                   <span className="material-symbols-outlined text-xs">check</span>
                 </span>
               )}

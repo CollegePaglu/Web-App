@@ -81,8 +81,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           onClick={handleFabClick}
           className="fixed bottom-6 right-6 lg:bottom-8 lg:right-[calc(25%_-_32px)] shadow-2xl rounded-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-40"
           style={{
-            background: "var(--cp-primary)",
-            color: "#fff",
+            background: "var(--cp-primary)", color: "var(--cp-primary-text)",
             width: "64px",
             height: "64px",
             boxShadow: "0 10px 25px -5px rgba(0,200,100,0.35)",

@@ -145,7 +145,7 @@ export default function CompleteProfilePage() {
         <div className="text-center mb-8">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-black"
-            style={{ background: "var(--cp-primary)", color: "#fff" }}
+            style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}
           >
             🎓
           </div>
@@ -237,7 +237,7 @@ export default function CompleteProfilePage() {
             type="submit"
             disabled={isLoading}
             className="w-full py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 mt-2"
-            style={{ background: "var(--cp-primary)", color: "#fff" }}
+            style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}
           >
             {isLoading ? "Saving…" : "Let's Go 🚀"}
           </button>

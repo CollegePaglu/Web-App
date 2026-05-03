@@ -168,7 +168,7 @@ export default function RightPanel() {
           <Link
             href="/login"
             className="inline-block px-4 py-2 rounded-xl text-xs font-bold"
-            style={{ background: "var(--cp-primary)", color: "#fff" }}
+            style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}
           >
             Login / Sign up
           </Link>
@@ -308,7 +308,7 @@ export default function RightPanel() {
       {/* ── Pro CTA ── */}
       <div
         className="p-4 rounded-2xl mt-auto"
-        style={{ background: "var(--cp-primary)", color: "#fff" }}
+        style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}
       >
         <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">
           Paglu Pro ⚡

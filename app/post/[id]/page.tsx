@@ -61,7 +61,7 @@ export default function PostPage() {
         <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20" style={{ color: "var(--cp-muted)" }}>
           <span className="material-symbols-outlined text-6xl">heart_broken</span>
           <p className="text-base font-bold">Post not found</p>
-          <button onClick={() => router.back()} className="px-5 py-2 rounded-xl font-bold text-sm" style={{ background: "var(--cp-primary)", color: "#fff" }}>
+          <button onClick={() => router.back()} className="px-5 py-2 rounded-xl font-bold text-sm" style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}>
             Go Back
           </button>
         </div>

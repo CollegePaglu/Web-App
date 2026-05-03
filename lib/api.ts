@@ -1,83 +1,185 @@
-import axios from "axios";
+/**
+ * API Client — Production-grade (matches AppV1/backend architecture)
+ *
+ * Endpoints:  POST /auth/otp/send  →  { phone }
+ *             POST /auth/otp/verify →  { phone, otp }  → { tokens, user, isNewUser }
+ *             POST /auth/refresh    →  { refreshToken } → { accessToken, refreshToken }
+ *             POST /auth/logout     (authenticated)
+ *             GET  /users/me
+ *             PATCH/POST /users/me/complete
+ *
+ * Token storage (web-safe):
+ *   localStorage["cp_access_token"]  — read by axios interceptor
+ *   localStorage["cp_refresh_token"] — used for auto-refresh
+ *   cookie "cp_access_token"         — read by Next.js middleware for SSR route protection
+ */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "axios";
 
-export const api = axios.create({
+// ── Constants ─────────────────────────────────────────────────────────────────
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
+
+const TOKEN_KEY   = "cp_access_token";
+const REFRESH_KEY = "cp_refresh_token";
+const COOKIE_MAX_AGE = 86400; // 24 h
+
+// ── Token helpers (localStorage + cookie) ────────────────────────────────────
+export const tokenStorage = {
+  getAccess:   () => (typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY)   : null),
+  getRefresh:  () => (typeof window !== "undefined" ? localStorage.getItem(REFRESH_KEY) : null),
+
+  setAccess(token: string) {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(TOKEN_KEY, token);
+    // Keep cookie in sync so Next.js middleware can read it server-side
+    document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
+  },
+
+  setRefresh(token: string) {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(REFRESH_KEY, token);
+  },
+
+  setTokens(access: string, refresh: string) {
+    this.setAccess(access);
+    this.setRefresh(refresh);
+  },
+
+  clear() {
+    if (typeof window === "undefined") return;
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_KEY);
+    document.cookie = `${TOKEN_KEY}=; path=/; max-age=0`;
+  },
+};
+
+// ── Create Axios instance ─────────────────────────────────────────────────────
+interface RetryConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
+let refreshPromise: Promise<string> | null = null;
+
+const api: AxiosInstance = axios.create({
   baseURL: API_BASE,
-  withCredentials: true,
-  headers: { "Content-Type": "application/json" },
+  timeout: 30_000,
+  headers: { Accept: "application/json" },
 });
 
-// Attach JWT token from localStorage to every request
+// ── Request interceptor: inject Bearer token ──────────────────────────────────
 api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("cp_access_token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+  const token = tokenStorage.getAccess();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+
+  // Remove Content-Type for GET / DELETE so browser sets it correctly
+  const method = config.method?.toLowerCase();
+  if (method === "get" || method === "delete" || method === "head") {
+    config.data = undefined;
+    delete (config.headers as Record<string, unknown>)["Content-Type"];
+    delete (config.headers as Record<string, unknown>)["content-type"];
   }
   return config;
 });
 
-// Auto-refresh on 401
+// ── Response interceptor: auto-refresh on 401 ────────────────────────────────
 api.interceptors.response.use(
   (res) => res,
-  async (error) => {
-    const original = error.config;
-    if (error.response?.status === 401 && !original._retry) {
+  async (error: AxiosError) => {
+    const original = error.config as RetryConfig | undefined;
+
+    if (error.response?.status === 401 && original && !original._retry) {
       original._retry = true;
-      try {
-        const refreshToken = localStorage.getItem("cp_refresh_token");
-        if (!refreshToken) throw new Error("No refresh token");
-        const { data } = await axios.post(`${API_BASE}/auth/refresh`, {
-          refreshToken,
-        });
-        const newToken = data.data?.accessToken;
-        if (newToken) {
-          localStorage.setItem("cp_access_token", newToken);
-          if (typeof document !== 'undefined') {
-            document.cookie = `cp_access_token=${newToken}; path=/; max-age=86400; SameSite=Lax`;
+
+      const refreshToken = tokenStorage.getRefresh();
+      if (!refreshToken) {
+        tokenStorage.clear();
+        if (typeof window !== "undefined") window.location.href = "/login";
+        return Promise.reject(error);
+      }
+
+      // Deduplicate concurrent refresh calls
+      if (!refreshPromise) {
+        refreshPromise = (async () => {
+          try {
+            const { data } = await axios.post(`${API_BASE}/auth/refresh`, {
+              refreshToken,
+            });
+            const payload = data.data;
+            const newAccess: string = payload.accessToken;
+            const newRefresh: string | undefined = payload.refreshToken;
+            tokenStorage.setAccess(newAccess);
+            if (newRefresh) tokenStorage.setRefresh(newRefresh);
+            return newAccess;
+          } catch {
+            tokenStorage.clear();
+            if (typeof window !== "undefined") window.location.href = "/login";
+            throw new Error("Session expired");
+          } finally {
+            refreshPromise = null;
           }
-          original.headers.Authorization = `Bearer ${newToken}`;
-          return api(original);
-        }
+        })();
+      }
+
+      try {
+        const newAccess = await refreshPromise;
+        if (original.headers) original.headers.Authorization = `Bearer ${newAccess}`;
+        return api(original);
       } catch {
-        localStorage.removeItem("cp_access_token");
-        localStorage.removeItem("cp_refresh_token");
-        window.location.href = "/login";
+        return Promise.reject(error);
       }
     }
+
     return Promise.reject(error);
   }
 );
 
-// ── Auth ─────────────────────────────────────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────────────────
 export const authApi = {
-  // Phone-based OTP via MSG91 WhatsApp
-  sendOtp: (phone: string) => api.post("/auth/otp/send", { phone }),
+  /** Send OTP via MSG91 WhatsApp (same as AppV1) */
+  sendOtp: (phone: string) =>
+    api.post("/auth/otp/send", { phone }),
+
+  /** Verify OTP → returns { tokens: { accessToken, refreshToken }, user, isNewUser } */
   verifyOtp: (phone: string, otp: string) =>
     api.post("/auth/otp/verify", { phone, otp }),
-  logout: () => api.post("/auth/logout"),
+
+  /** Refresh access token */
   refresh: (refreshToken: string) =>
     api.post("/auth/refresh", { refreshToken }),
+
+  /** Logout (invalidates session in Redis) */
+  logout: () => api.post("/auth/logout"),
 };
 
-// ── Users ────────────────────────────────────────────────────────────────────
+// ── Users ─────────────────────────────────────────────────────────────────────
 export const usersApi = {
   getMe: () => api.get("/users/me"),
-  updateProfile: (data: Record<string, unknown>) => api.patch("/users/me", data),
-  completeProfile: (data: Record<string, unknown>) => api.post("/users/me/complete", data),
-  setUsername: (username: string) => api.patch("/users/me/username", { username }),
+
+  updateProfile: (data: Record<string, unknown>) =>
+    api.patch("/users/me", data),
+
+  completeProfile: (data: Record<string, unknown>) =>
+    api.post("/users/me/complete", data),
+
+  setUsername: (username: string) =>
+    api.patch("/users/me/username", { username }),
+
   uploadAvatar: (file: File) => {
     const fd = new FormData();
     fd.append("avatar", file);
-    return api.post("/users/me/avatar", fd, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    return api.post("/users/me/avatar", fd);
   },
+
   getUser: (id: string) => api.get(`/users/${id}`),
+
   searchUsers: (q: string, page = 1) =>
-    api.get(`/users/search?q=${encodeURIComponent(q)}&page=${page}`),
+    api.get(`/users/search`, { params: { q, page } }),
+
   getStatus: () => api.get("/users/me/status"),
-  getLeaderboard: (limit = 20) => api.get(`/users/leaderboard?limit=${limit}`),
+
+  getLeaderboard: (limit = 20) =>
+    api.get("/users/leaderboard", { params: { limit } }),
 };
 
 // ── Community / Posts ─────────────────────────────────────────────────────────
@@ -93,14 +195,13 @@ export const postsApi = {
     includeUpdates?: string;
   }) => api.get("/community/posts", { params }),
 
-  getTrendingTags: (limit = 5) => api.get("/community/posts/trending/tags", { params: { limit } }),
+  getTrendingTags: (limit = 5) =>
+    api.get("/community/posts/trending/tags", { params: { limit } }),
 
   getPost: (id: string) => api.get(`/community/posts/${id}`),
 
   createPost: (formData: FormData) =>
-    api.post("/community/posts", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
+    api.post("/community/posts", formData),
 
   deletePost: (id: string) => api.delete(`/community/posts/${id}`),
 
@@ -110,19 +211,22 @@ export const postsApi = {
   removeVote: (id: string) => api.delete(`/community/posts/${id}/vote`),
 
   getComments: (id: string, page = 1) =>
-    api.get(`/community/posts/${id}/comments?page=${page}`),
+    api.get(`/community/posts/${id}/comments`, { params: { page } }),
 
-  addComment: (id: string, content: string, isAnonymous = false, parentId?: string) =>
-    api.post(`/community/posts/${id}/comments`, { content, isAnonymous, parentId }),
+  addComment: (
+    id: string,
+    content: string,
+    isAnonymous = false,
+    parentId?: string
+  ) => api.post(`/community/posts/${id}/comments`, { content, isAnonymous, parentId }),
 
-  getMyPosts: (page = 1) => api.get(`/community/posts/my?page=${page}`),
+  getMyPosts: (page = 1) =>
+    api.get("/community/posts/my", { params: { page } }),
 
   uploadMedia: (files: File[]) => {
     const fd = new FormData();
     files.forEach((f) => fd.append("media", f));
-    return api.post("/community/media/upload", fd, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    return api.post("/community/media/upload", fd);
   },
 };
 
@@ -131,9 +235,9 @@ export const followApi = {
   follow: (userId: string) => api.post(`/users/${userId}/follow`),
   unfollow: (userId: string) => api.delete(`/users/${userId}/follow`),
   getFollowers: (userId: string, page = 1) =>
-    api.get(`/users/${userId}/followers?page=${page}`),
+    api.get(`/users/${userId}/followers`, { params: { page } }),
   getFollowing: (userId: string, page = 1) =>
-    api.get(`/users/${userId}/following?page=${page}`),
+    api.get(`/users/${userId}/following`, { params: { page } }),
 };
 
 // ── Colleges ──────────────────────────────────────────────────────────────────
@@ -143,7 +247,8 @@ export const collegesApi = {
 
 // ── Events ────────────────────────────────────────────────────────────────────
 export const eventsApi = {
-  getEvents: (params?: { page?: number; limit?: number }) => api.get("/community/events", { params }),
+  getEvents: (params?: { page?: number; limit?: number }) =>
+    api.get("/community/events", { params }),
 };
 
 export default api;

@@ -1,7 +1,7 @@
 "use client";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { authApi, usersApi } from "@/lib/api";
+import { authApi, usersApi, tokenStorage } from "@/lib/api";
 
 export interface User {
   _id: string;
@@ -66,13 +66,13 @@ export const useAuthStore = create<AuthState>()(
         try {
           const { data } = await authApi.verifyOtp(phone, otp);
           const { tokens, user, isNewUser } = data.data;
-          const { accessToken, refreshToken } = tokens;
-          localStorage.setItem("cp_access_token", accessToken);
-          localStorage.setItem("cp_refresh_token", refreshToken);
-          document.cookie = `cp_access_token=${accessToken}; path=/; max-age=86400; SameSite=Lax`;
+          
+          // Use centralized token storage (matches AppV1)
+          tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
+          
           set({
-            accessToken,
-            refreshToken,
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
             user,
             isAuthenticated: true,
           });
@@ -98,11 +98,7 @@ export const useAuthStore = create<AuthState>()(
           set({ user: data.data, isAuthenticated: true });
         } catch {
           set({ user: null, isAuthenticated: false, accessToken: null, refreshToken: null });
-          localStorage.removeItem("cp_access_token");
-          localStorage.removeItem("cp_refresh_token");
-          if (typeof document !== "undefined") {
-            document.cookie = "cp_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-          }
+          tokenStorage.clear();
         }
       },
 
@@ -120,9 +116,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           await authApi.logout();
         } catch { /* ignore */ }
-        localStorage.removeItem("cp_access_token");
-        localStorage.removeItem("cp_refresh_token");
-        document.cookie = "cp_access_token=; path=/; max-age=0";
+        tokenStorage.clear();
         set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
       },
 
@@ -131,8 +125,6 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "cp-auth",
       partialize: (state) => ({
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),

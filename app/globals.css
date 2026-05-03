@@ -13,54 +13,57 @@
   --radius-xl:   2rem;
   --radius-full: 9999px;
 
-  /* AppV1 Green & Beige Theme — light mode tokens */
-  --color-cp-primary:  #1B9D6B;
-  --color-cp-bg:       #f8f6f3;
-  --color-cp-text:     #1C1917;
-  --color-cp-muted:    #57534E;
-  --color-cp-accent:   #F59E0B;
+  /* AppV1 Pure Black & White Theme — light mode tokens */
+  --color-cp-primary:  #000000;
+  --color-cp-bg:       #F8F9FA;
+  --color-cp-text:     #000000;
+  --color-cp-muted:    #737373;
+  --color-cp-accent:   #000000;
   --color-cp-blue:     #3B82F6;
-  --color-cp-success:  #22C55E;
+  --color-cp-success:  #000000;
   --color-cp-error:    #EF4444;
-  --color-cp-surface:  #fcfdfb;
-  --color-cp-surface2: #f0ede8;
+  --color-cp-surface:  #FFFFFF;
+  --color-cp-surface2: #F3F4F6;
 }
 
 /* ─── Raw CSS variables (for inline styles & dynamic dark swap) ─────────────── */
-/* AppV1 Green & Beige Theme — light mode */
+/* AppV1 Pure Black & White Theme — light mode */
 :root {
-  --cp-primary:       #1B9D6B;
-  --cp-bg:            #f8f6f3;
-  --cp-text:          #1C1917;
-  --cp-muted:         #57534E;
-  --cp-accent:        #F59E0B;
+  --cp-primary:       #000000;
+  --cp-primary-text:  #FFFFFF;
+  --cp-bg:            #F8F9FA;
+  --cp-text:          #000000;
+  --cp-muted:         #737373;
+  --cp-accent:        #000000;
   --cp-blue:          #3B82F6;
-  --cp-success:       #22C55E;
+  --cp-success:       #000000;
   --cp-error:         #EF4444;
-  --cp-surface:       #fcfdfb;
-  --cp-surface-2:     #f0ede8;
-  --cp-border:        rgba(28, 25, 23, 0.08);
-  --cp-border-strong: rgba(28, 25, 23, 0.15);
-  --cp-primary-10:    rgba(27, 157, 107, 0.10);
-  --cp-primary-20:    rgba(27, 157, 107, 0.20);
+  --cp-surface:       #FFFFFF;
+  --cp-surface-2:     #F3F4F6;
+  --cp-border:        #E5E7EB;
+  --cp-border-strong: #D1D5DB;
+  --cp-primary-10:    rgba(0, 0, 0, 0.05);
+  --cp-primary-20:    rgba(0, 0, 0, 0.10);
 }
 
-/* AppV1 Dark Mode — OLED black */
+/* AppV1 Dark Mode — OLED black (Pure Monochrome) */
 .dark {
-  --cp-primary:       #1B9D6B;
-  --cp-bg:            #000000;
-  --cp-text:          #FFFFFF;
-  --cp-muted:         #A3A3A3;
-  --cp-accent:        #FBBF24;
+  --cp-primary:       #FFFFFF;
+  --cp-primary-text:  #000000;
+  --cp-bg:            #000000;   /* OLED Pure Black */
+  --cp-text:          #FFFFFF;   /* Pure White */
+  --cp-muted:         #A3A3A3;   /* Light Grey (textSecondary) */
+  --cp-tertiary:      #737373;   /* Darker Grey (textTertiary) */
+  --cp-accent:        #FFFFFF;
   --cp-blue:          #3B82F6;
-  --cp-success:       #22C55E;
+  --cp-success:       #FFFFFF;
   --cp-error:         #F87171;
-  --cp-surface:       #121212;
-  --cp-surface-2:     #1E1E1E;
-  --cp-border:        rgba(255, 255, 255, 0.08);
-  --cp-border-strong: rgba(255, 255, 255, 0.15);
-  --cp-primary-10:    rgba(27, 157, 107, 0.15);
-  --cp-primary-20:    rgba(27, 157, 107, 0.25);
+  --cp-surface:       #121212;   /* Material Dark Grey */
+  --cp-surface-2:     #1E1E1E;   /* Slightly Lighter Grey */
+  --cp-border:        #262626;   /* Subtle Dark Border */
+  --cp-border-strong: #404040;
+  --cp-primary-10:    rgba(255, 255, 255, 0.10);
+  --cp-primary-20:    rgba(255, 255, 255, 0.20);
 }
 
 /* ─── Base ──────────────────────────────────────────────────────────────────── */
@@ -91,6 +94,8 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--cp-border-strong); border-radius: 99px; }
 
+.dark ::-webkit-scrollbar-thumb { background: #404040; }
+
 /* ─── Utilities ──────────────────────────────────────────────────────────── */
 html { scroll-behavior: smooth; }
 
@@ -109,7 +114,7 @@ html { scroll-behavior: smooth; }
 .animate-fade-in-up { animation: fadeInUp 0.3s ease both; }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(27, 157, 107, 0.4); }
-  50%       { box-shadow: 0 0 0 8px rgba(27, 157, 107, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(163, 163, 163, 0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(163, 163, 163, 0); }
 }
 .animate-pulse-glow { animation: pulse-glow 2s ease infinite; }

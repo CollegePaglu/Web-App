@@ -215,7 +215,7 @@ export default function CreatePost() {
               onClick={handleSubmit}
               disabled={isSubmitting || !content.trim()}
               className="px-6 py-2 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
-              style={{ background: "var(--cp-primary)", color: "#fff" }}
+              style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}
             >
               {isSubmitting ? "Posting…" : "Post 🚀"}
             </button>

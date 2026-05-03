@@ -54,7 +54,7 @@ export default function LoginPage() {
       {/* ── Left decorative panel (hidden on mobile) ── */}
       <div
         className="hidden lg:flex flex-col justify-between w-1/2 p-12 relative overflow-hidden"
-        style={{ background: "linear-gradient(145deg, #1B9D6B, #0F6D48)" }}
+        style={{ background: "linear-gradient(145deg, #262626, #000000)" }}
       >
         {/* Background blobs */}
         <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-20 -translate-y-1/2 translate-x-1/2" style={{ background: "#fff" }} />
@@ -123,7 +123,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           {/* Mobile brand */}
           <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black" style={{ background: "var(--cp-primary)", color: "#fff" }}>CP</div>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black" style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}>CP</div>
             <span className="font-extrabold text-lg" style={{ color: "var(--cp-text)" }}>College Paglu</span>
           </div>
 
@@ -174,7 +174,7 @@ export default function LoginPage() {
                 type="submit"
                 disabled={isLoading || !isPhoneValid}
                 className="w-full py-3.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 mt-1"
-                style={{ background: "var(--cp-primary)", color: "#fff" }}
+                style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -229,7 +229,7 @@ export default function LoginPage() {
                 type="submit"
                 disabled={isLoading || otp.length !== 6}
                 className="w-full py-3.5 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
-                style={{ background: "var(--cp-primary)", color: "#fff" }}
+                style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">

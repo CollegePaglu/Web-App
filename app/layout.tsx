@@ -26,6 +26,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Anti-flash: apply saved theme before first paint (defaults to dark like AppV1) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var t=localStorage.getItem('cp-theme')||'dark';if(t==='dark')document.documentElement.classList.add('dark');})();`,
+          }}
+        />
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           rel="stylesheet"
@@ -40,9 +46,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             toastOptions={{
               duration: 3000,
               style: {
+                background: "#1E1E1E",
+                color: "#FFFFFF",
                 borderRadius: "12px",
+                border: "1px solid #262626",
                 fontSize: "13px",
                 fontWeight: 600,
+              },
+              success: {
+                iconTheme: { primary: "#FFFFFF", secondary: "#000000" },
+              },
+              error: {
+                iconTheme: { primary: "#F87171", secondary: "#000000" },
               },
             }}
           />

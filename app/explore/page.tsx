@@ -50,7 +50,7 @@ export default function ExplorePage() {
             </div>
             <button type="submit"
               className="px-5 py-3 rounded-2xl font-bold text-sm"
-              style={{ background: "var(--cp-primary)", color: "#fff" }}>
+              style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}>
               Search
             </button>
           </div>
