@@ -53,10 +53,16 @@ export default function PostCard({ post }: Props) {
     window.dispatchEvent(new CustomEvent("post-deleted", { detail: { id: localPost._id } }));
   };
 
+  const authorName = localPost.author?.displayName || 
+                     localPost.author?.name || 
+                     (localPost.author?.firstName ? `${localPost.author.firstName} ${localPost.author.lastName || ""}`.trim() : null) || 
+                     localPost.author?.username || 
+                     "User";
+
   const author = localPost.isAnonymous
     ? { name: "Anonymous 🎭", avatar: null }
     : {
-        name: localPost.author?.displayName || localPost.author?.name || localPost.author?.username || "User",
+        name: authorName,
         avatar: localPost.author?.avatar,
       };
 

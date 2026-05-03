@@ -13,6 +13,8 @@ export interface PostAuthor {
   _id: string;
   username?: string;
   displayName?: string;
+  firstName?: string;
+  lastName?: string;
   name?: string;
   avatar?: string;
   role?: string;
