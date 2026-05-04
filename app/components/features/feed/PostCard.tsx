@@ -32,7 +32,7 @@ export default function PostCard({ post }: Props) {
   const [showFull, setShowFull] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reported, setReported] = useState(false);
-  const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; type: string } | null>(null);
+  const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; type?: string } | null>(null);
 
   // Local optimistic vote state
   const [localPost, setLocalPost] = useState(post);
@@ -317,7 +317,7 @@ export default function PostCard({ post }: Props) {
         {/* Media */}
         {mediaToRender && mediaToRender.length > 0 && (
           <div className={`${mediaToRender.length === 1 ? "" : "grid grid-cols-2 gap-0.5"} overflow-hidden`}>
-            {mediaToRender.map((m: { type: string; url: string }, i: number) => (
+            {mediaToRender.map((m: { type?: string; url: string }, i: number) => (
               <div 
                 key={i} 
                 className={`overflow-hidden cursor-pointer ${mediaToRender.length === 1 ? "aspect-video" : "aspect-square"}`}

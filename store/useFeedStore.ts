@@ -176,15 +176,19 @@ interface FeedState {
   isLoading: boolean;
   isLoadingMore: boolean;
   currentPage: number;
-  sortBy: "recent" | "trending" | "top";
+  sortBy: "recent" | "trending" | "top" | "recommended";
   filterType: string;
   filterCategory: string;
   searchQuery: string;
   usingDemoData: boolean;
+  /** Freshness seed — bumped on every refresh to get reshuffled recommendations */
+  refreshSeed: number;
 
   fetchFeed: (reset?: boolean, categoryOverride?: string) => Promise<void>;
+  /** Refresh feed with a new seed — equivalent to pull-to-refresh in the mobile app */
+  refreshFeed: () => Promise<void>;
   loadMore: () => Promise<void>;
-  setSortBy: (sort: "recent" | "trending" | "top") => void;
+  setSortBy: (sort: "recent" | "trending" | "top" | "recommended") => void;
   setFilterType: (type: string) => void;
   setFilterCategory: (category: string) => void;
   setSearchQuery: (q: string) => void;
@@ -218,14 +222,15 @@ export const useFeedStore = create<FeedState>((set, get) => ({
   isLoading: false,
   isLoadingMore: false,
   currentPage: 1,
-  sortBy: "recent",
+  sortBy: "recommended",
   filterType: "",
   filterCategory: "",
   searchQuery: "",
   usingDemoData: false,
+  refreshSeed: Date.now(),
 
   fetchFeed: async (reset = true, categoryOverride?: string) => {
-    const { sortBy, filterType, searchQuery, filterCategory } = get();
+    const { sortBy, filterType, searchQuery, filterCategory, refreshSeed } = get();
     const category = categoryOverride !== undefined ? categoryOverride : filterCategory;
     set({ isLoading: reset, isLoadingMore: !reset });
     try {
@@ -236,6 +241,8 @@ export const useFeedStore = create<FeedState>((set, get) => ({
         type: filterType || undefined,
         category: category || undefined,
         search: searchQuery || undefined,
+        // Send seed to recommendation engine for fresh Top-K shuffle
+        _t: sortBy === "recommended" ? refreshSeed : undefined,
       });
       const posts: Post[] = data.data || [];
       // If backend truly returns empty, fall back to demo data
@@ -263,6 +270,16 @@ export const useFeedStore = create<FeedState>((set, get) => ({
         set({ isLoading: false, isLoadingMore: false });
       }
     }
+  },
+
+  /**
+   * Refresh feed with a new seed — web equivalent of pull-to-refresh.
+   * Bumps the seed so the recommendation engine's Top-K shuffle
+   * produces a meaningfully different ordering (Instagram-like).
+   */
+  refreshFeed: async () => {
+    set({ refreshSeed: Date.now(), currentPage: 1 });
+    await get().fetchFeed(true);
   },
 
   loadMore: async () => {

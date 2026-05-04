@@ -227,12 +227,14 @@ export const postsApi = {
   getFeed: (params?: {
     page?: number;
     limit?: number;
-    sortBy?: "recent" | "trending" | "top";
+    sortBy?: "recent" | "trending" | "top" | "recommended";
     type?: string;
     category?: string;
     search?: string;
     authorType?: string;
     includeUpdates?: string;
+    /** Freshness seed — pass Date.now() on refresh to get a reshuffled recommendation feed */
+    _t?: number;
   }) => api.get("/community/posts", { params }),
 
   getUpdates: (page = 1, limit = 20) =>

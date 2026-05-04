@@ -37,9 +37,24 @@ export default function SideBar() {
 
   const NavLink = ({ href, icon, label, exact = false, badge = 0 }: { href: string; icon: string; label: string; exact?: boolean; badge?: number }) => {
     const isActive = exact ? pathname === href : pathname === href || (href !== "/" && pathname.startsWith(href));
+    
+    const handleClick = (e: React.MouseEvent) => {
+      // If clicking Home while already on Home, trigger a fresh feed refresh and scroll to top
+      if (href === "/" && pathname === "/") {
+        e.preventDefault();
+        // Scroll the main content area to top
+        const main = document.querySelector("main");
+        if (main) main.scrollTo({ top: 0, behavior: "smooth" });
+        else window.scrollTo({ top: 0, behavior: "smooth" });
+        // Dispatch event so FeedList (which uses local state) can re-fetch
+        window.dispatchEvent(new CustomEvent("feed-refresh"));
+      }
+    };
+
     return (
       <Link
         href={href}
+        onClick={handleClick}
         className="flex items-center gap-3 py-2.5 px-4 rounded-2xl text-sm font-semibold transition-all duration-200 group relative"
         style={{
           background: isActive ? "var(--cp-primary-10)" : "transparent",

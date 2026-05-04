@@ -21,11 +21,15 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
+
+  /** Seed for recommendation engine freshness — bumped on every refresh */
+  const seedRef = useRef(Date.now());
+
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadingIndicatorRef = useRef<HTMLDivElement>(null);
 
   // ── Fetch a single page of posts ────────────────────────────────────────
-  const fetchPage = useCallback(async (pageNum: number, reset: boolean) => {
+  const fetchPage = useCallback(async (pageNum: number, reset: boolean, seed?: number) => {
     try {
       let data;
       if (isUpdates) {
@@ -35,13 +39,16 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
         const response = await postsApi.getConfessions(pageNum, LIMIT);
         data = response.data;
       } else {
+        // Use recommendation engine by default (no sortBy → backend defaults to 'recommended')
+        // Pass _t seed for Top-K shuffle freshness (same as AppV1 mobile app)
         const response = await postsApi.getFeed({
           page: pageNum,
           limit: LIMIT,
-          sortBy: "recent",
           category: category || undefined,
           authorType: authorType || undefined,
           ...(authorType ? { includeUpdates: "true" } : {}),
+          // Recommendation engine seed — fresh shuffle on every refresh
+          _t: seed || seedRef.current,
         });
         data = response.data;
       }
@@ -85,7 +92,9 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
     setIsLoading(true);
     setPosts([]);
     setPage(1);
-    fetchPage(1, true).then(() => {
+    // Generate a fresh seed for the initial load
+    seedRef.current = Date.now();
+    fetchPage(1, true, seedRef.current).then(() => {
       // Prepend any posts created while on a different route (sessionStorage cache)
       try {
         const EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
@@ -158,6 +167,20 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
     window.addEventListener("post-commented", handler);
     return () => window.removeEventListener("post-commented", handler);
   }, []);
+
+  // ── Listen for feed-refresh (triggered by clicking Home in sidebar) ───
+  useEffect(() => {
+    const handler = () => {
+      // Bump seed so recommendation engine produces a new Top-K shuffle
+      seedRef.current = Date.now();
+      setIsLoading(true);
+      setPosts([]);
+      setPage(1);
+      fetchPage(1, true, seedRef.current).finally(() => setIsLoading(false));
+    };
+    window.addEventListener("feed-refresh", handler);
+    return () => window.removeEventListener("feed-refresh", handler);
+  }, [fetchPage]);
 
   // ── Infinite scroll ───────────────────────────────────────────────────
   const loadMore = useCallback(async () => {
