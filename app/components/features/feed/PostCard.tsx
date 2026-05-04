@@ -32,6 +32,7 @@ export default function PostCard({ post }: Props) {
   const [showFull, setShowFull] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reported, setReported] = useState(false);
+  const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; type: string } | null>(null);
 
   // Local optimistic vote state
   const [localPost, setLocalPost] = useState(post);
@@ -60,10 +61,11 @@ export default function PostCard({ post }: Props) {
                      "User";
 
   const author = localPost.isAnonymous
-    ? { name: "Anonymous 🎭", avatar: null }
+    ? { name: "Anonymous 🎭", avatar: null, _id: null }
     : {
         name: authorName,
         avatar: localPost.author?.avatar,
+        _id: localPost.author?._id,
       };
 
   const isOwner = user && localPost.author && (user._id === localPost.author._id || user.id === localPost.author._id);
@@ -313,9 +315,21 @@ export default function PostCard({ post }: Props) {
         {mediaToRender && mediaToRender.length > 0 && (
           <div className={`${mediaToRender.length === 1 ? "" : "grid grid-cols-2 gap-0.5"} overflow-hidden`}>
             {mediaToRender.map((m: any, i: number) => (
-              <div key={i} className={`overflow-hidden ${mediaToRender.length === 1 ? "aspect-video" : "aspect-square"}`}>
+              <div 
+                key={i} 
+                className={`overflow-hidden cursor-pointer ${mediaToRender.length === 1 ? "aspect-video" : "aspect-square"}`}
+                onClick={(e) => {
+                  // Don't trigger if they clicked the video controls
+                  if (m.type === "video" && (e.target as HTMLElement).tagName.toLowerCase() === "video") {
+                    // Let native controls work, but also allow fullscreen expansion if clicked outside controls (handled by browser usually, but let's allow it)
+                    setFullscreenMedia(m);
+                  } else {
+                    setFullscreenMedia(m);
+                  }
+                }}
+              >
                 {m.type === "video" ? (
-                  <video src={m.url} controls className="w-full h-full object-cover" />
+                  <video src={m.url} controls className="w-full h-full object-cover pointer-events-none" />
                 ) : (
                   <img src={m.url} alt="" className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700" />
                 )}
@@ -383,6 +397,44 @@ export default function PostCard({ post }: Props) {
 
       {/* Comments Drawer */}
       {showComments && <CommentsPanel postId={localPost._id} onClose={() => setShowComments(false)} updateCommentCount={broadcastComment} />}
+      
+      {/* Fullscreen Media Viewer */}
+      {fullscreenMedia && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          onClick={() => setFullscreenMedia(null)}
+        >
+          <button 
+            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/80 transition-colors z-[101]"
+            onClick={(e) => {
+              e.stopPropagation();
+              setFullscreenMedia(null);
+            }}
+          >
+            <span className="material-symbols-outlined text-2xl">close</span>
+          </button>
+          
+          <div 
+            className="relative w-full h-full max-w-5xl flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {fullscreenMedia.type === "video" ? (
+              <video 
+                src={fullscreenMedia.url} 
+                controls 
+                autoPlay 
+                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" 
+              />
+            ) : (
+              <img 
+                src={fullscreenMedia.url} 
+                alt="Fullscreen view" 
+                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" 
+              />
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

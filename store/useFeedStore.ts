@@ -25,7 +25,7 @@ export interface Post {
   content: string;
   title?: string;
   type: "text" | "image" | "video" | "poll" | "link" | "update";
-  category?: "GOSSIPS" | "CONFESSIONS" | "MEMES" | "GENERAL" | string;
+  category?: "GOSSIPS" | "CONFESSION" | "MEMES" | "GENERAL" | string;
   author?: PostAuthor;
   isAnonymous: boolean;
   media?: PostMedia[];

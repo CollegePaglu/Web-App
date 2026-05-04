@@ -195,6 +195,12 @@ export const postsApi = {
     includeUpdates?: string;
   }) => api.get("/community/posts", { params }),
 
+  getUpdates: (page = 1, limit = 20) =>
+    api.get("/community/updates", { params: { page, limit } }),
+
+  getConfessions: (page = 1, limit = 20) =>
+    api.get("/community/confessions", { params: { page, limit } }),
+
   getTrendingTags: (limit = 5) =>
     api.get("/community/posts/trending/tags", { params: { limit } }),
 

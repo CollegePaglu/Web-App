@@ -8,7 +8,7 @@ interface Comment {
   _id: string;
   content: string;
   isAnonymous: boolean;
-  author?: { _id: string; displayName?: string; name?: string; username?: string; avatar?: string };
+  author?: { _id: string; displayName?: string; name?: string; username?: string; avatar?: string; firstName?: string; lastName?: string };
   createdAt: string;
   repliesCount?: number;
 }
@@ -25,7 +25,7 @@ function timeAgo(d: string) {
 interface Props { postId: string; onClose: () => void; updateCommentCount?: (delta: number) => void; }
 
 export default function CommentsPanel({ postId, onClose, updateCommentCount }: Props) {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState("");
@@ -76,7 +76,15 @@ export default function CommentsPanel({ postId, onClose, updateCommentCount }: P
 
     try {
       const { data } = await postsApi.addComment(postId, content.trim(), isAnonymous);
-      setComments((c) => [data.data, ...c]);
+      const newComment = data.data;
+      
+      // The backend addComment endpoint doesn't populate the author object immediately,
+      // so we inject the current user's info for immediate display if not anonymous.
+      if (!newComment.author && !isAnonymous && user) {
+        newComment.author = { ...user };
+      }
+      
+      setComments((c) => [newComment, ...c]);
       updateCommentCount?.(1);
       setContent("");
       toast.success("Comment added!");
@@ -115,7 +123,8 @@ export default function CommentsPanel({ postId, onClose, updateCommentCount }: P
             </div>
           ) : (
             comments.map((c) => {
-              const name = c.isAnonymous ? "Anonymous 🎭" : (c.author?.displayName || c.author?.name || c.author?.username || "User");
+              const authorName = c.author?.displayName || c.author?.name || (c.author?.firstName ? `${c.author.firstName} ${c.author.lastName || ""}`.trim() : null) || c.author?.username || "User";
+              const name = c.isAnonymous ? "Anonymous 🎭" : authorName;
               const av = c.isAnonymous ? null : c.author?.avatar;
               return (
                 <div key={c._id} className="flex gap-3">

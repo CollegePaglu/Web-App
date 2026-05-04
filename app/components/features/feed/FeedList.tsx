@@ -8,11 +8,13 @@ import { Post, DEMO_POSTS } from "@/store/useFeedStore";
 interface Props {
   category?: string;
   authorType?: string;
+  isUpdates?: boolean;
+  isConfessions?: boolean;
 }
 
 const LIMIT = 10;
 
-export default function FeedList({ category, authorType }: Props) {
+export default function FeedList({ category, authorType, isUpdates, isConfessions }: Props) {
   const { isAuthenticated } = useAuthStore();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,18 +27,32 @@ export default function FeedList({ category, authorType }: Props) {
   // ── Fetch a single page of posts ────────────────────────────────────────
   const fetchPage = useCallback(async (pageNum: number, reset: boolean) => {
     try {
-      const { data } = await postsApi.getFeed({
-        page: pageNum,
-        limit: LIMIT,
-        sortBy: "recent",
-        category: category || undefined,
-        authorType: authorType || undefined,
-        // Society posts may be posted as 'updates' visibility — include them
-        ...(authorType ? { includeUpdates: "true" } : {}),
-      });
+      let data;
+      if (isUpdates) {
+        const response = await postsApi.getUpdates(pageNum, LIMIT);
+        data = response.data;
+      } else if (isConfessions) {
+        const response = await postsApi.getConfessions(pageNum, LIMIT);
+        data = response.data;
+      } else {
+        const response = await postsApi.getFeed({
+          page: pageNum,
+          limit: LIMIT,
+          sortBy: "recent",
+          category: category || undefined,
+          authorType: authorType || undefined,
+          ...(authorType ? { includeUpdates: "true" } : {}),
+        });
+        data = response.data;
+      }
 
-      const incoming: Post[] = data.data || [];
-      const pagination = data.pagination;
+      let incoming: Post[] = data.data || data.items || [];
+      // Backend returns commentCount, frontend expects commentsCount
+      incoming = incoming.map(post => ({
+        ...post,
+        commentsCount: post.commentsCount ?? (post as any).commentCount ?? 0
+      }));
+      const pagination = data.pagination || data.meta?.pagination || { hasNext: data.hasMore };
 
       if (incoming.length === 0 && reset) {
         // Fallback demo data — filter by category if provided
@@ -203,7 +219,7 @@ export default function FeedList({ category, authorType }: Props) {
           </div>
           <span className="text-base font-bold flex-1" style={{ color: "var(--cp-text)" }}>
             {category === "GOSSIPS"     ? "Drop some gossip… ☕"
-            : category === "CONFESSIONS" ? "Confess anonymously… 🤫"
+            : category === "CONFESSION" ? "Confess anonymously… 🤫"
             : category === "MEMES"       ? "Share a meme 😂"
             : "What's happening on campus? ✨"}
           </span>
@@ -216,7 +232,7 @@ export default function FeedList({ category, authorType }: Props) {
       {posts.length === 0 && !isLoading ? (
         <div className="p-12 text-center rounded-3xl mt-8" style={{ background: "var(--cp-surface)", border: "1px solid var(--cp-border)" }}>
           <div className="text-5xl mb-4">
-            {category === "GOSSIPS" ? "🗣️" : category === "CONFESSIONS" ? "🤫" : category === "MEMES" ? "😂" : "📭"}
+            {category === "GOSSIPS" ? "🗣️" : category === "CONFESSION" ? "🤫" : category === "MEMES" ? "😂" : "📭"}
           </div>
           <h3 className="font-bold text-lg mb-2" style={{ color: "var(--cp-text)" }}>Nothing here… yet!</h3>
           <p className="text-sm" style={{ color: "var(--cp-muted)" }}>

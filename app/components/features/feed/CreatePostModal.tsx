@@ -4,11 +4,11 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { postsApi } from "@/lib/api";
 import toast from "react-hot-toast";
 
-type Category = "GOSSIPS" | "CONFESSIONS" | "MEMES";
+type Category = "GOSSIPS" | "CONFESSION" | "MEMES";
 
 const CATEGORY_META: Record<Category, { label: string; emoji: string; color: string; placeholder: string }> = {
   GOSSIPS:     { label: "Gossips",     emoji: "🗣️", color: "#8B5CF6", placeholder: "Share the campus gossip… ☕" },
-  CONFESSIONS: { label: "Confessions", emoji: "🤫", color: "#EC4899", placeholder: "Confess anonymously… 🎭 No one will know it's you." },
+  CONFESSION:  { label: "Confessions", emoji: "🤫", color: "#EC4899", placeholder: "Confess anonymously… 🎭 No one will know it's you." },
   MEMES:       { label: "Memes",       emoji: "😂", color: "#F59E0B", placeholder: "Drop a meme or a funny take 😂" },
 };
 
@@ -22,7 +22,7 @@ export default function CreatePostModal({ onClose, initialCategory = "GOSSIPS" }
   const [category, setCategory] = useState<Category>(initialCategory);
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
-  const [isAnonymous, setIsAnonymous] = useState(category === "CONFESSIONS");
+  const [isAnonymous, setIsAnonymous] = useState(category === "CONFESSION");
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,7 +35,7 @@ export default function CreatePostModal({ onClose, initialCategory = "GOSSIPS" }
 
   const switchCategory = (c: Category) => {
     setCategory(c);
-    if (c === "CONFESSIONS") setIsAnonymous(true);
+    if (c === "CONFESSION") setIsAnonymous(true);
     else setIsAnonymous(false);
   };
 

@@ -9,10 +9,10 @@ import CreatePostModal from "../features/feed/CreatePostModal";
 
 const NAV_ITEMS = [
   { label: "Home",        icon: "home",        href: "/" },
+  { label: "Updates",     icon: "campaign",    href: "/updates" },
   { label: "Gossips",     icon: "chat_bubble",  href: "/gossips" },
   { label: "Confessions", icon: "lock",         href: "/confessions" },
   { label: "Memes",       icon: "mood",         href: "/memes" },
-  { label: "Societies",   icon: "groups",       href: "/societies" },
   { label: "Leaderboard", icon: "leaderboard",  href: "/leaderboard" },
 ];
 
@@ -32,7 +32,7 @@ export default function SideBar() {
 
   useEffect(() => setMounted(true), []);
 
-  const displayName = user?.displayName || user?.name || user?.username || "Guest";
+  const displayName = user?.displayName || user?.name || (user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : null) || user?.username || "Guest";
   const avatar = user?.avatar;
   const initial = displayName[0]?.toUpperCase();
 
@@ -75,15 +75,14 @@ export default function SideBar() {
       >
         <div className="flex flex-col h-full py-5 px-3 overflow-y-auto scrollbar-hide">
           {/* Brand */}
-          <div className="flex items-center gap-3 px-3 mb-6">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0" style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}>
-              CP
-            </div>
-            <div>
-              <p className="text-sm font-extrabold leading-none" style={{ color: "var(--cp-text)" }}>College Paglu</p>
-              <p className="text-[10px]" style={{ color: "var(--cp-muted)" }}>Campus community</p>
-            </div>
-          </div>
+          <Link href="/" className="px-3 mb-6 block w-fit transition-opacity hover:opacity-80">
+            <img 
+              src="/BrandAssets/CollegePagluSVG.svg" 
+              alt="College Paglu" 
+              className="h-16 w-auto object-contain -ml-2"
+              style={{ filter: theme === "dark" ? "invert(1)" : "none" }}
+            />
+          </Link>
 
           {/* User mini card */}
           {mounted && isAuthenticated && user && (

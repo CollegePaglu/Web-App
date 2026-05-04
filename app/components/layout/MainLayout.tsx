@@ -6,12 +6,12 @@ import CreatePostModal from "../features/feed/CreatePostModal";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 
-type Category = "GOSSIPS" | "CONFESSIONS" | "MEMES";
+type Category = "GOSSIPS" | "CONFESSION" | "MEMES";
 
 const SPEED_DIAL = [
-  { category: "GOSSIPS"     as Category, emoji: "🗣️", label: "Gossips",     color: "#8B5CF6" },
-  { category: "CONFESSIONS" as Category, emoji: "🤫", label: "Confessions", color: "#EC4899" },
-  { category: "MEMES"       as Category, emoji: "😂", label: "Memes",       color: "#F59E0B" },
+  { category: "GOSSIPS"    as Category, emoji: "🗣️", label: "Gossips",     color: "#8B5CF6" },
+  { category: "CONFESSION" as Category, emoji: "🤫", label: "Confessions", color: "#EC4899" },
+  { category: "MEMES"      as Category, emoji: "😂", label: "Memes",       color: "#F59E0B" },
 ];
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {

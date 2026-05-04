@@ -19,7 +19,7 @@ export default function ConfessionsPage() {
             <p className="text-sm" style={{ color: "var(--cp-muted)" }}>Anonymous space — secrets, crushes & unfiltered thoughts</p>
           </div>
         </div>
-        <FeedList category="CONFESSIONS" />
+        <FeedList isConfessions={true} category="CONFESSION" />
       </div>
     </MainLayout>
   );
