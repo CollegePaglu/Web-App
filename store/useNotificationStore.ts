@@ -63,8 +63,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     try {
       const { data } = await api.get('/notifications/unread-count');
       set({ unreadCount: data.data.count });
-    } catch (error) {
-      console.error('Failed to fetch unread count:', error);
+    } catch {
+      // Endpoint not yet implemented
     }
   },
 

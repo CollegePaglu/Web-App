@@ -55,7 +55,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
         {/* Speed-dial sub-buttons (shown when open) */}
         {fabOpen && (
-          <div className="fixed bottom-24 right-6 lg:bottom-28 lg:right-[calc(25%_-_32px)] flex flex-col gap-3 items-end z-40">
+          <div className="fixed bottom-24 right-6 lg:bottom-28 lg:right-[calc(25%-32px)] flex flex-col gap-3 items-end z-40">
             {SPEED_DIAL.map((item, i) => (
               <button
                 key={item.category}
@@ -79,7 +79,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <button
           id="fab-create-post"
           onClick={handleFabClick}
-          className="fixed bottom-6 right-6 lg:bottom-8 lg:right-[calc(25%_-_32px)] shadow-2xl rounded-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-40"
+          className="fixed bottom-6 right-6 lg:bottom-8 lg:right-[calc(25%-32px)] shadow-2xl rounded-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-40"
           style={{
             background: "var(--cp-primary)", color: "var(--cp-primary-text)",
             width: "64px",

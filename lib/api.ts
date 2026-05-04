@@ -82,9 +82,49 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// ── Response interceptor: auto-refresh on 401 ────────────────────────────────
+import { resolvePublicMediaUrl } from "./resolveMediaUrl";
+
+function fixMediaUrls(obj: any): any {
+  if (!obj || typeof obj !== "object") return obj;
+
+  if (Array.isArray(obj)) {
+    return obj.map(fixMediaUrls);
+  }
+
+  const result: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === "string") {
+      if (
+        key === "avatar" ||
+        key === "mediaUrl" ||
+        key === "profilePicture" ||
+        key === "videoUrl" ||
+        key === "thumbnailUrl" ||
+        key === "url"
+      ) {
+        result[key] = resolvePublicMediaUrl(value);
+      } else {
+        result[key] = value;
+      }
+    } else if (key === "images" && Array.isArray(value)) {
+      result[key] = value.map((v) => (typeof v === "string" ? resolvePublicMediaUrl(v) : fixMediaUrls(v)));
+    } else if (typeof value === "object") {
+      result[key] = fixMediaUrls(value);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
+// ── Response interceptor: auto-refresh on 401 & fix media URLs ──────────────
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    if (res.data) {
+      res.data = fixMediaUrls(res.data);
+    }
+    return res;
+  },
   async (error: AxiosError) => {
     const original = error.config as RetryConfig | undefined;
 

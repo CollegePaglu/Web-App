@@ -107,8 +107,9 @@ export default function PostCard({ post }: Props) {
         res = await postsApi.vote(localPost._id, type);
         broadcastVote(res.data.data.upvotes, res.data.data.downvotes, type);
       }
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to vote");
+    } catch (err: unknown) {
+      const message = (err as Record<string, Record<string, Record<string, string>>>)?.response?.data?.message;
+      toast.error(message || "Failed to vote");
     } finally {
       setIsVoting(false);
     }
@@ -139,8 +140,8 @@ export default function PostCard({ post }: Props) {
         setShareClicked(true);
         setTimeout(() => setShareClicked(false), 2000);
         return; // Success
-      } catch (err: any) {
-        if (err.name !== 'AbortError') {
+      } catch (err: unknown) {
+        if ((err as Error).name !== 'AbortError') {
           console.error("Native share failed", err);
         }
       }
@@ -184,6 +185,7 @@ export default function PostCard({ post }: Props) {
             {author._id && !localPost.isAnonymous ? (
               <Link href={`/profile/${author._id}`} className="w-10 h-10 rounded-full overflow-hidden shrink-0 transition-transform hover:scale-105" style={{ background: "var(--cp-surface-2)" }}>
                 {author.avatar ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={author.avatar} alt={author.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-sm font-bold" style={{ color: "var(--cp-primary)" }}>
@@ -194,6 +196,7 @@ export default function PostCard({ post }: Props) {
             ) : (
               <div className="w-10 h-10 rounded-full overflow-hidden shrink-0" style={{ background: "var(--cp-surface-2)" }}>
                 {author.avatar ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={author.avatar} alt={author.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-sm font-bold" style={{ color: "var(--cp-primary)" }}>
@@ -314,7 +317,7 @@ export default function PostCard({ post }: Props) {
         {/* Media */}
         {mediaToRender && mediaToRender.length > 0 && (
           <div className={`${mediaToRender.length === 1 ? "" : "grid grid-cols-2 gap-0.5"} overflow-hidden`}>
-            {mediaToRender.map((m: any, i: number) => (
+            {mediaToRender.map((m: { type: string; url: string }, i: number) => (
               <div 
                 key={i} 
                 className={`overflow-hidden cursor-pointer ${mediaToRender.length === 1 ? "aspect-video" : "aspect-square"}`}
@@ -331,6 +334,7 @@ export default function PostCard({ post }: Props) {
                 {m.type === "video" ? (
                   <video src={m.url} controls className="w-full h-full object-cover pointer-events-none" />
                 ) : (
+                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={m.url} alt="" className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700" />
                 )}
               </div>
@@ -401,11 +405,11 @@ export default function PostCard({ post }: Props) {
       {/* Fullscreen Media Viewer */}
       {fullscreenMedia && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-100 flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
           onClick={() => setFullscreenMedia(null)}
         >
           <button 
-            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/80 transition-colors z-[101]"
+            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/80 transition-colors z-101"
             onClick={(e) => {
               e.stopPropagation();
               setFullscreenMedia(null);
@@ -426,6 +430,7 @@ export default function PostCard({ post }: Props) {
                 className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" 
               />
             ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img 
                 src={fullscreenMedia.url} 
                 alt="Fullscreen view" 

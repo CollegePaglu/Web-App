@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTheme } from "@/app/context/ThemeContext";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import CreatePostModal from "../features/feed/CreatePostModal";
 
@@ -26,11 +27,9 @@ export default function SideBar() {
   const { user, isAuthenticated } = useAuthStore();
   const { theme, toggleTheme } = useTheme();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [mounted] = useState(() => typeof window !== "undefined");
 
   const { unreadCount } = useNotificationStore();
-
-  useEffect(() => setMounted(true), []);
 
   const displayName = user?.displayName || user?.name || (user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : null) || user?.username || "Guest";
   const avatar = user?.avatar;
@@ -70,12 +69,13 @@ export default function SideBar() {
   return (
     <>
       <aside
-        className="w-64 flex-shrink-0 sticky top-0 h-screen flex flex-col overflow-hidden"
+        className="w-64 shrink-0 sticky top-0 h-screen flex flex-col overflow-hidden"
         style={{ background: "var(--cp-surface)", borderRight: "1px solid var(--cp-border)" }}
       >
         <div className="flex flex-col h-full py-5 px-3 overflow-y-auto scrollbar-hide">
           {/* Brand */}
           <Link href="/" className="px-3 mb-6 block w-fit transition-opacity hover:opacity-80">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
               src="/BrandAssets/CollegePagluSVG.svg" 
               alt="College Paglu" 
@@ -92,7 +92,7 @@ export default function SideBar() {
               style={{ background: "var(--cp-surface-2)", border: "1px solid var(--cp-border)" }}
             >
               <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 flex items-center justify-center text-xs font-bold" style={{ background: "var(--cp-primary-10)", color: "var(--cp-primary)" }}>
-                {avatar ? <img src={avatar} className="w-full h-full object-cover" alt="" /> : initial}
+                {avatar ? <Image src={avatar} width={36} height={36} className="w-full h-full object-cover" alt="" unoptimized /> : initial}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold truncate" style={{ color: "var(--cp-text)" }}>{displayName}</p>

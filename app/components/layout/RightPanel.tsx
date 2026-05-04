@@ -9,17 +9,19 @@ import { postsApi, eventsApi } from "@/lib/api";
 export default function RightPanel() {
   const { posts } = useFeedStore();
   const { user, isAuthenticated } = useAuthStore();
-  const [mounted, setMounted] = useState(false);
+  const [mounted] = useState(() => typeof window !== "undefined");
   const [showProModal, setShowProModal] = useState(false);
   const [trendingTags, setTrendingTags] = useState<{ tag: string; posts: number }[]>([]);
 
-  const [events, setEvents] = useState<any[]>([]);
-
-  useEffect(() => {
-    setMounted(true);
-    fetchTrendingTags();
-    fetchEvents();
-  }, []);
+  interface EventType {
+    _id: string;
+    title: string;
+    venue: string;
+    time?: string;
+    date: string;
+    highlight?: boolean;
+  }
+  const [events, setEvents] = useState<EventType[]>([]);
 
   const fetchTrendingTags = async () => {
     try {
@@ -27,8 +29,8 @@ export default function RightPanel() {
       if (res.data?.success && res.data.data) {
         setTrendingTags(res.data.data);
       }
-    } catch (error) {
-      console.error("Failed to fetch trending tags:", error);
+    } catch {
+      // Endpoint not yet implemented
     }
   };
 
@@ -38,10 +40,15 @@ export default function RightPanel() {
       if (res.data?.success && res.data.data?.data) {
         setEvents(res.data.data.data);
       }
-    } catch (error) {
-      console.error("Failed to fetch events:", error);
+    } catch {
+      // Endpoint not yet implemented
     }
   };
+
+  useEffect(() => {
+    fetchTrendingTags();
+    fetchEvents();
+  }, []);
 
   const displayTags = trendingTags.length > 0
     ? trendingTags
@@ -67,7 +74,7 @@ export default function RightPanel() {
 
   return (
     <aside
-      className="w-72 flex-shrink-0 sticky top-0 h-screen overflow-y-auto scrollbar-hide flex flex-col py-5 px-4 gap-5"
+      className="w-72 shrink-0 sticky top-0 h-screen overflow-y-auto scrollbar-hide flex flex-col py-5 px-4 gap-5"
       style={{
         background: "var(--cp-surface)",
         borderLeft: "1px solid var(--cp-border)",
@@ -373,7 +380,7 @@ export default function RightPanel() {
                   </h3>
                   
                   <p className="text-sm font-medium px-4 leading-relaxed" style={{ color: "var(--cp-muted)" }}>
-                    We're brewing something extraordinary behind the scenes. The ultimate campus upgrade drops soon.
+                    We&apos;re brewing something extraordinary behind the scenes. The ultimate campus upgrade drops soon.
                   </p>
                 </div>
               </div>
@@ -383,7 +390,7 @@ export default function RightPanel() {
                 className="w-full py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90 active:scale-95"
                 style={{ background: "var(--cp-surface-2)", color: "var(--cp-muted)" }}
               >
-                Got it, I'll wait! 😎
+                Got it, I&apos;ll wait! 😎
               </button>
             </div>
           </div>

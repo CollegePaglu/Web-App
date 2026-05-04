@@ -50,7 +50,7 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
       // Backend returns commentCount, frontend expects commentsCount
       incoming = incoming.map(post => ({
         ...post,
-        commentsCount: post.commentsCount ?? (post as any).commentCount ?? 0
+        commentsCount: post.commentsCount ?? (post as unknown as Record<string, number>).commentCount ?? 0
       }));
       const pagination = data.pagination || data.meta?.pagination || { hasNext: data.hasMore };
 
@@ -77,9 +77,10 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
         setHasMore(false);
       }
     }
-  }, [category, authorType]);
+  }, [category, authorType, isUpdates, isConfessions]);
 
   // ── Initial load + refresh when category changes ─────────────────────────
+  // eslint-disable-next-line react-compiler/react-compiler
   useEffect(() => {
     setIsLoading(true);
     setPosts([]);
@@ -212,7 +213,7 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
           }}
         >
           <div
-            className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-lg shadow-sm group-hover:rotate-12 transition-transform duration-300"
+            className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-lg shadow-sm group-hover:rotate-12 transition-transform duration-300"
             style={{ background: "var(--cp-primary-10)", color: "var(--cp-primary)" }}
           >
             ✏️
@@ -257,7 +258,7 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
         )}
         {!hasMore && posts.length > 0 && (
           <p className="text-xs font-bold text-center" style={{ color: "var(--cp-muted)" }}>
-            You've reached the end! 🎉
+            You&apos;ve reached the end! 🎉
           </p>
         )}
       </div>
