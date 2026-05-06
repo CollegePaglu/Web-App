@@ -4,6 +4,7 @@ import PostCard from "./PostCard";
 import { useAuthStore } from "@/store/useAuthStore";
 import { postsApi } from "@/lib/api";
 import { Post, DEMO_POSTS } from "@/store/useFeedStore";
+import StoriesBar from "./StoriesBar";
 
 interface Props {
   category?: string;
@@ -225,6 +226,11 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
 
   return (
     <div className="flex flex-col gap-4 pb-20 w-full max-w-[600px] mx-auto px-4 lg:px-0">
+      {/* Stories Bar (Only on Home Feed) */}
+      {!category && !isUpdates && !isConfessions && !authorType && (
+        <StoriesBar />
+      )}
+
       {/* CreatePost inline prompt */}
       {isAuthenticated && (
         <div
@@ -265,9 +271,16 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {posts.map((post) => (
-            <PostCard key={post._id} post={post} />
-          ))}
+          {(() => {
+            const seen = new Set<string>();
+            return posts.filter((p) => {
+              if (seen.has(p._id)) return false;
+              seen.add(p._id);
+              return true;
+            }).map((post) => (
+              <PostCard key={post._id} post={post} />
+            ));
+          })()}
         </div>
       )}
 

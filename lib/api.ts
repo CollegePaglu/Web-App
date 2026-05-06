@@ -277,6 +277,14 @@ export const postsApi = {
     return api.post("/community/media/upload", fd);
   },
 };
+// ── Stories ───────────────────────────────────────────────────────────────────
+export const storiesApi = {
+  getFeed: (page = 1, limit = 10) =>
+    api.get("/community/stories/feed", { params: { page, limit } }),
+
+  viewStory: (id: string, viewDuration = 5) =>
+    api.post(`/community/stories/${id}/view`, { viewDuration }),
+};
 
 // ── Follow ────────────────────────────────────────────────────────────────────
 export const followApi = {

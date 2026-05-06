@@ -79,6 +79,10 @@ export default function PostCard({ post }: Props) {
   const isTextOnly = !mediaToRender || mediaToRender.length === 0;
   const contentTooLong = (localPost.content?.length || 0) > CONTENT_TRUNCATE;
 
+  if (mediaToRender && mediaToRender.length > 0) {
+    console.log("[PostCard] rendering media for post", localPost._id, mediaToRender);
+  }
+
   const handleVote = async (type: "up" | "down") => {
     if (!isAuthenticated) { toast.error("Login to vote"); return; }
     if (isVoting) return;

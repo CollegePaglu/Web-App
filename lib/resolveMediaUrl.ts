@@ -11,7 +11,12 @@ function looksLikeSchemelessHostPath(s: string): boolean {
 function remapLegacyMediaHosts(url: string): string {
   try {
     let u = new URL(url);
-    if (u.protocol === 'http:') {
+
+    if (u.hostname === 'localhost' && u.port === '5000' && u.pathname.startsWith('/college-paglu/')) {
+      u = new URL(`https://cdn.collegepaglu.com${u.pathname}${u.search}${u.hash}`);
+    }
+
+    if (u.protocol === 'http:' && u.hostname !== 'localhost') {
       u.protocol = 'https:';
     }
 
