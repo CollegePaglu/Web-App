@@ -17,8 +17,9 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "axios";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
+const API_BASE = process.env.NODE_ENV === "production"
+  ? process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.collegepaglu.com/api/v1"
+  : process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
 
 const TOKEN_KEY   = "cp_access_token";
 const REFRESH_KEY = "cp_refresh_token";

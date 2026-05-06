@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/backend/:path*",
-        destination: `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1"}/:path*`,
+        destination: `${process.env.NODE_ENV === "production" ? (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.collegepaglu.com/api/v1") : (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1")}/:path*`,
       },
     ];
   },
