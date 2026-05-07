@@ -5,6 +5,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { postsApi } from "@/lib/api";
 import { Post, DEMO_POSTS } from "@/store/useFeedStore";
 import StoriesBar from "./StoriesBar";
+import { ArrowRight } from "lucide-react";
 
 interface Props {
   category?: string;
@@ -254,7 +255,7 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
             : "What's happening on campus? ✨"}
           </span>
           <div className="w-8 h-8 rounded-full flex items-center justify-center transition-colors" style={{ background: "var(--cp-surface-2)", color: "var(--cp-primary)" }}>
-            <span className="material-symbols-outlined text-sm font-black">arrow_forward</span>
+            <ArrowRight size={16} strokeWidth={3} />
           </div>
         </div>
       )}

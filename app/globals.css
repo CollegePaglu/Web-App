@@ -1,5 +1,4 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
@@ -80,10 +79,6 @@ body {
   color: var(--cp-text);
 }
 
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
-
 .cp-card {
   background: var(--cp-surface);
   border: 1px solid var(--cp-border);
@@ -118,3 +113,33 @@ html { scroll-behavior: smooth; }
   50%       { box-shadow: 0 0 0 8px rgba(163, 163, 163, 0); }
 }
 .animate-pulse-glow { animation: pulse-glow 2s ease infinite; }
+
+/* ─── Mobile Drawer animation ────────────────────────────────────────────── */
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes slideOutLeft {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+.animate-slide-in-left { animation: slideInLeft 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in { animation: fadeIn 0.2s ease both; }
+
+/* ─── Mobile-safe touch targets ──────────────────────────────────────────── */
+@media (max-width: 1023px) {
+  /* Ensure minimum 44px tap targets on mobile */
+  button, a, [role="button"] {
+    min-height: 36px;
+  }
+}
+
+/* ─── Safe area padding for mobile bottom nav ────────────────────────────── */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

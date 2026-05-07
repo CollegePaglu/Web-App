@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { postsApi } from "@/lib/api";
 import toast from "react-hot-toast";
+import { Eye, EyeOff, X, ImagePlus } from "lucide-react";
 
 type Category = "GOSSIPS" | "CONFESSION" | "MEMES" | "GENERAL";
 
@@ -167,9 +168,7 @@ export default function CreatePostModal({ onClose, initialCategory = "GENERAL" }
                 className="flex items-center gap-1 text-[10px] font-semibold transition-all mt-0.5"
                 style={{ color: isAnonymous ? meta.color : "var(--cp-muted)" }}
               >
-                <span className="material-symbols-outlined text-xs">
-                  {isAnonymous ? "visibility_off" : "visibility"}
-                </span>
+                {isAnonymous ? <EyeOff size={14} /> : <Eye size={14} />}
                 {isAnonymous ? "Posting anonymously" : "Post publicly"}
               </button>
             </div>
@@ -179,7 +178,7 @@ export default function CreatePostModal({ onClose, initialCategory = "GENERAL" }
             className="p-2 rounded-xl transition-all hover:opacity-70"
             style={{ color: "var(--cp-muted)", background: "var(--cp-surface-2)" }}
           >
-            <span className="material-symbols-outlined text-lg">close</span>
+            <X size={18} />
           </button>
         </div>
 
@@ -244,7 +243,7 @@ export default function CreatePostModal({ onClose, initialCategory = "GENERAL" }
             className="flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all hover:opacity-80"
             style={{ background: "var(--cp-surface-2)", color: "var(--cp-muted)" }}
           >
-            <span className="material-symbols-outlined text-lg" style={{ color: meta.color }}>add_photo_alternate</span>
+            <ImagePlus size={18} style={{ color: meta.color }} />
             <span className="text-xs font-semibold">
               {mediaFiles.length > 0 ? `${mediaFiles.length} photo${mediaFiles.length > 1 ? "s" : ""}` : "Photo / Video"}
             </span>

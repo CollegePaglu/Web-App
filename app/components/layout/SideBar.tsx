@@ -7,19 +7,32 @@ import { useTheme } from "@/app/context/ThemeContext";
 import { useState } from "react";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import CreatePostModal from "../features/feed/CreatePostModal";
+import {
+  Home,
+  Megaphone,
+  MessageCircle,
+  Lock,
+  Smile,
+  Trophy,
+  Bell,
+  Settings,
+  LogIn,
+  Sun,
+  Moon,
+} from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: "Home",        icon: "home",        href: "/" },
-  { label: "Updates",     icon: "campaign",    href: "/updates" },
-  { label: "Gossips",     icon: "chat_bubble",  href: "/gossips" },
-  { label: "Confessions", icon: "lock",         href: "/confessions" },
-  { label: "Memes",       icon: "mood",         href: "/memes" },
-  { label: "Leaderboard", icon: "leaderboard",  href: "/leaderboard" },
+  { label: "Home",        icon: Home,          href: "/" },
+  { label: "Updates",     icon: Megaphone,     href: "/updates" },
+  { label: "Gossips",     icon: MessageCircle, href: "/gossips" },
+  { label: "Confessions", icon: Lock,          href: "/confessions" },
+  { label: "Memes",       icon: Smile,         href: "/memes" },
+  { label: "Leaderboard", icon: Trophy,        href: "/leaderboard" },
 ];
 
 const AUTH_NAV = [
-  { label: "Notifications", icon: "notifications", href: "/notifications" },
-  { label: "Settings", icon: "settings", href: "/settings" },
+  { label: "Notifications", icon: Bell,     href: "/notifications" },
+  { label: "Settings",      icon: Settings, href: "/settings" },
 ];
 
 export default function SideBar() {
@@ -35,18 +48,15 @@ export default function SideBar() {
   const avatar = user?.avatar;
   const initial = displayName[0]?.toUpperCase();
 
-  const NavLink = ({ href, icon, label, exact = false, badge = 0 }: { href: string; icon: string; label: string; exact?: boolean; badge?: number }) => {
+  const NavLink = ({ href, icon: Icon, label, exact = false, badge = 0 }: { href: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number; fill?: string; className?: string }>; label: string; exact?: boolean; badge?: number }) => {
     const isActive = exact ? pathname === href : pathname === href || (href !== "/" && pathname.startsWith(href));
     
     const handleClick = (e: React.MouseEvent) => {
-      // If clicking Home while already on Home, trigger a fresh feed refresh and scroll to top
       if (href === "/" && pathname === "/") {
         e.preventDefault();
-        // Scroll the main content area to top
         const main = document.querySelector("main");
         if (main) main.scrollTo({ top: 0, behavior: "smooth" });
         else window.scrollTo({ top: 0, behavior: "smooth" });
-        // Dispatch event so FeedList (which uses local state) can re-fetch
         window.dispatchEvent(new CustomEvent("feed-refresh"));
       }
     };
@@ -62,12 +72,11 @@ export default function SideBar() {
         }}
       >
         <div className="relative">
-          <span
-            className="material-symbols-outlined text-xl"
-            style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0", color: isActive ? "var(--cp-primary)" : "var(--cp-muted)" }}
-          >
-            {icon}
-          </span>
+          <Icon
+            size={20}
+            strokeWidth={isActive ? 2.5 : 1.8}
+            fill={isActive ? "currentColor" : "none"}
+          />
           {badge > 0 && (
             <span 
               className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full"
@@ -83,8 +92,9 @@ export default function SideBar() {
 
   return (
     <>
+      {/* Desktop sidebar — hidden on mobile */}
       <aside
-        className="w-64 shrink-0 sticky top-0 h-screen flex flex-col overflow-hidden"
+        className="hidden lg:flex w-64 shrink-0 sticky top-0 h-screen flex-col overflow-hidden"
         style={{ background: "var(--cp-surface)", borderRight: "1px solid var(--cp-border)" }}
       >
         <div className="flex flex-col h-full py-5 px-3 overflow-y-auto scrollbar-hide">
@@ -144,7 +154,7 @@ export default function SideBar() {
                 className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl font-bold text-sm transition-all hover:opacity-90 active:scale-95 w-full"
                 style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}
               >
-                <span className="material-symbols-outlined text-lg">login</span>
+                <LogIn size={18} />
                 Login
               </Link>
             ) : null}
@@ -154,7 +164,7 @@ export default function SideBar() {
               className="flex items-center gap-3 py-2 px-4 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
               style={{ color: "var(--cp-muted)" }}
             >
-              <span className="material-symbols-outlined text-lg">{theme === "dark" ? "light_mode" : "dark_mode"}</span>
+              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
               {theme === "dark" ? "Light Mode" : "Dark Mode"}
             </button>
           </div>

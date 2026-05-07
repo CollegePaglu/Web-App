@@ -6,6 +6,17 @@ import { postsApi } from "@/lib/api";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import CommentsPanel from "./CommentsPanel";
+import { 
+  Trash2, 
+  MoreVertical, 
+  Flag, 
+  ThumbsUp, 
+  ThumbsDown, 
+  MessageSquare, 
+  Share2, 
+  Check, 
+  X 
+} from "lucide-react";
 
 interface Props { post: Post; }
 
@@ -228,7 +239,7 @@ export default function PostCard({ post }: Props) {
           <div className="flex items-center gap-2">
             {isOwner && (
               <button onClick={handleDelete} className="p-2 rounded-lg transition-colors hover:text-red-500" style={{ color: "var(--cp-muted)" }}>
-                <span className="material-symbols-outlined text-lg">delete</span>
+                <Trash2 size={18} />
               </button>
             )}
             {/* ⋯ options for others' posts */}
@@ -239,7 +250,7 @@ export default function PostCard({ post }: Props) {
                   className="p-2 rounded-lg transition-colors hover:opacity-70"
                   style={{ color: "var(--cp-muted)" }}
                 >
-                  <span className="material-symbols-outlined text-lg">more_vert</span>
+                  <MoreVertical size={18} />
                 </button>
                 {menuOpen && (
                   <div
@@ -252,7 +263,7 @@ export default function PostCard({ post }: Props) {
                       className="flex items-center gap-2 w-full px-4 py-3 text-sm font-semibold transition-colors hover:opacity-80"
                       style={{ color: reported ? "var(--cp-muted)" : "#EF4444" }}
                     >
-                      <span className="material-symbols-outlined text-base">flag</span>
+                      <Flag size={16} />
                       {reported ? "Reported" : "Report post"}
                     </button>
                   </div>
@@ -355,10 +366,10 @@ export default function PostCard({ post }: Props) {
             className="flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95"
             style={{ color: localPost.userVote === "up" ? "var(--cp-primary)" : "var(--cp-muted)" }}
           >
-            <span className="material-symbols-outlined text-lg"
-              style={{ fontVariationSettings: localPost.userVote === "up" ? "'FILL' 1" : "'FILL' 0" }}>
-              thumb_up
-            </span>
+            <ThumbsUp 
+              size={18} 
+              fill={localPost.userVote === "up" ? "currentColor" : "none"} 
+            />
             <span className="text-xs font-bold" style={{ color: "var(--cp-text)" }}>
               {(localPost.upvotes || 0).toLocaleString()} liked
             </span>
@@ -371,10 +382,10 @@ export default function PostCard({ post }: Props) {
             className="flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95"
             style={{ color: localPost.userVote === "down" ? "var(--cp-error)" : "var(--cp-muted)" }}
           >
-            <span className="material-symbols-outlined text-lg"
-              style={{ fontVariationSettings: localPost.userVote === "down" ? "'FILL' 1" : "'FILL' 0" }}>
-              thumb_down
-            </span>
+            <ThumbsDown 
+              size={18} 
+              fill={localPost.userVote === "down" ? "currentColor" : "none"} 
+            />
             <span className="text-xs font-bold" style={{ color: "var(--cp-text)" }}>{localPost.downvotes || 0}</span>
           </button>
 
@@ -384,7 +395,7 @@ export default function PostCard({ post }: Props) {
             className="flex items-center gap-1.5 transition-colors"
             style={{ color: "var(--cp-muted)" }}
           >
-            <span className="material-symbols-outlined text-lg">chat_bubble_outline</span>
+            <MessageSquare size={18} />
             <span className="text-xs font-bold" style={{ color: "var(--cp-text)" }}>{localPost.commentsCount || 0}</span>
           </button>
 
@@ -396,9 +407,7 @@ export default function PostCard({ post }: Props) {
               color: shareClicked ? "var(--cp-primary)" : "var(--cp-muted)",
             }}
           >
-            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'wght' 300" }}>
-              {shareClicked ? "check" : "share"}
-            </span>
+            {shareClicked ? <Check size={18} /> : <Share2 size={18} />}
           </button>
         </div>
       </article>
@@ -413,13 +422,13 @@ export default function PostCard({ post }: Props) {
           onClick={() => setFullscreenMedia(null)}
         >
           <button 
-            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/80 transition-colors z-101"
+            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/80 transition-colors z-[101]"
             onClick={(e) => {
               e.stopPropagation();
               setFullscreenMedia(null);
             }}
           >
-            <span className="material-symbols-outlined text-2xl">close</span>
+            <X size={24} />
           </button>
           
           <div 

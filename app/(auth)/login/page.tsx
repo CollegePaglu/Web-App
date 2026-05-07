@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTheme } from "@/app/context/ThemeContext";
 import toast from "react-hot-toast";
+import { Sun, Moon, ArrowLeft } from "lucide-react";
 
 /** Normalise to +91XXXXXXXXXX */
 function normalisePhone(raw: string): string {
@@ -115,9 +116,7 @@ export default function LoginPage() {
           className="absolute top-6 right-6 p-2 rounded-xl transition-all hover:opacity-80"
           style={{ color: "var(--cp-muted)", background: "var(--cp-surface)" }}
         >
-          <span className="material-symbols-outlined text-xl">
-            {theme === "dark" ? "light_mode" : "dark_mode"}
-          </span>
+          {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
         </button>
 
         <div className="w-full max-w-sm">
@@ -198,7 +197,7 @@ export default function LoginPage() {
                 className="flex items-center gap-1.5 text-xs mb-1 transition-colors"
                 style={{ color: "var(--cp-muted)" }}
               >
-                <span className="material-symbols-outlined text-sm">arrow_back</span>
+                <ArrowLeft size={14} />
                 Change number
               </button>
 

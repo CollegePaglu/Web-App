@@ -8,6 +8,7 @@ import Navbar from "@/app/components/layout/Navbar";
 import PostCard from "@/app/components/features/feed/PostCard";
 import CommentsPanel from "@/app/components/features/feed/CommentsPanel";
 import { DEMO_POSTS } from "@/store/useFeedStore";
+import { HeartCrack, ArrowLeft } from "lucide-react";
 
 export default function PostPage() {
   const { id } = useParams() as { id: string };
@@ -59,7 +60,7 @@ export default function PostPage() {
       <MainLayout>
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center gap-4 py-20" style={{ color: "var(--cp-muted)" }}>
-          <span className="material-symbols-outlined text-6xl">heart_broken</span>
+          <HeartCrack size={64} />
           <p className="text-base font-bold">Post not found</p>
           <button onClick={() => router.back()} className="px-5 py-2 rounded-xl font-bold text-sm" style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}>
             Go Back
@@ -75,7 +76,7 @@ export default function PostPage() {
       <div className="flex-1 w-full max-w-[600px] mx-auto px-4 py-6 flex flex-col gap-6">
         {/* Back button */}
         <button onClick={() => router.back()} className="flex items-center gap-2 text-sm font-bold w-fit transition-opacity hover:opacity-70" style={{ color: "var(--cp-text)" }}>
-          <span className="material-symbols-outlined">arrow_back</span>
+          <ArrowLeft size={18} />
           Back
         </button>
 

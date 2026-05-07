@@ -1,10 +1,11 @@
 "use client";
 import SideBar from "./SideBar";
-// import RightPanel from "./RightPanel"; // Removed per user request
+import MobileBottomNav from "./MobileBottomNav";
 import { useState } from "react";
 import CreatePostModal from "../features/feed/CreatePostModal";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
+import { Edit3 } from "lucide-react";
 
 type Category = "GOSSIPS" | "CONFESSION" | "MEMES" | "GENERAL";
 
@@ -36,12 +37,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       className="flex w-full relative"
       style={{ background: "var(--cp-bg)", minHeight: "100vh" }}
     >
-      {/* Left Sidebar */}
+      {/* Left Sidebar (Desktop only) */}
       <SideBar />
 
       {/* Center scrollable feed */}
       <main
-        className="flex-1 min-w-0 flex flex-col overflow-y-auto relative"
+        className="flex-1 min-w-0 flex flex-col overflow-y-auto relative pb-20 lg:pb-0"
         style={{ height: "100vh" }}
       >
         {children}
@@ -80,7 +81,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <button
           id="fab-create-post"
           onClick={handleFabClick}
-          className="fixed bottom-6 right-6 lg:bottom-8 lg:right-10 shadow-2xl rounded-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-40"
+          className="fixed bottom-20 lg:bottom-8 right-6 lg:right-10 shadow-2xl rounded-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-40"
           style={{
             background: "var(--cp-primary)", color: "var(--cp-primary-text)",
             width: "64px",
@@ -91,11 +92,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           }}
           aria-label="Create Post"
         >
-          <span className="material-symbols-outlined text-3xl">edit</span>
+          <Edit3 size={28} />
         </button>
       </main>
 
-      {/* Right Panel — removed */}
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
 
       {/* Create Post Modal */}
       {activeCategory && (

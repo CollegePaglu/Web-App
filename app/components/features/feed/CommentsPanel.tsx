@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { postsApi } from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
 import toast from "react-hot-toast";
+import { X, Eye, EyeOff, Send, MessageSquare } from "lucide-react";
 
 interface Comment {
   _id: string;
@@ -105,8 +106,8 @@ export default function CommentsPanel({ postId, onClose, updateCommentCount }: P
         {/* Header */}
         <div className="flex items-center justify-between p-5" style={{ borderBottom: "1px solid var(--cp-border)" }}>
           <h3 className="font-bold text-base" style={{ color: "var(--cp-text)" }}>Comments</h3>
-          <button onClick={onClose} style={{ color: "var(--cp-muted)" }}>
-            <span className="material-symbols-outlined">close</span>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-black/5" style={{ color: "var(--cp-text)" }}>
+            <X size={24} />
           </button>
         </div>
 
@@ -117,9 +118,9 @@ export default function CommentsPanel({ postId, onClose, updateCommentCount }: P
               <div className="w-6 h-6 border-2 rounded-full animate-spin" style={{ borderColor: "var(--cp-border)", borderTopColor: "var(--cp-primary)" }} />
             </div>
           ) : comments.length === 0 ? (
-            <div className="text-center py-12" style={{ color: "var(--cp-muted)" }}>
-              <span className="material-symbols-outlined text-4xl mb-2 block">chat_bubble_outline</span>
-              <p className="text-sm">No comments yet. Be the first!</p>
+            <div className="flex flex-col items-center justify-center p-8 text-center" style={{ color: "var(--cp-muted)" }}>
+              <MessageSquare size={40} className="mb-2 opacity-50 block" />
+              <p className="text-sm font-bold">No comments yet. Be the first!</p>
             </div>
           ) : (
             comments.map((c) => {
@@ -151,15 +152,13 @@ export default function CommentsPanel({ postId, onClose, updateCommentCount }: P
           <div className="p-4 flex flex-col gap-2" style={{ borderTop: "1px solid var(--cp-border)" }}>
             <div className="flex items-center gap-2 mb-1">
               <button
-                onClick={() => setIsAnonymous((v) => !v)}
-                className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full transition-colors"
-                style={{
-                  background: isAnonymous ? "var(--cp-primary-10)" : "var(--cp-surface-2)",
-                  color: isAnonymous ? "var(--cp-primary)" : "var(--cp-muted)",
-                }}
+                type="button"
+                onClick={() => setIsAnonymous(!isAnonymous)}
+                className="w-10 h-10 flex items-center justify-center shrink-0 rounded-full transition-colors hover:opacity-80"
+                style={{ background: isAnonymous ? "var(--cp-primary)" : "var(--cp-surface-2)", color: isAnonymous ? "var(--cp-primary-text)" : "var(--cp-muted)" }}
+                title={isAnonymous ? "Commenting Anonymously" : "Commenting Publicly"}
               >
-                <span className="material-symbols-outlined text-xs">{isAnonymous ? "visibility_off" : "visibility"}</span>
-                {isAnonymous ? "Anonymous" : "Public"}
+                {isAnonymous ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
             <div className="flex items-end gap-2">
@@ -182,7 +181,7 @@ export default function CommentsPanel({ postId, onClose, updateCommentCount }: P
               >
                 {submitting
                   ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  : <span className="material-symbols-outlined text-lg">send</span>}
+                  : <Send size={18} style={{ transform: "translateX(1px)" }} />}
               </button>
             </div>
           </div>

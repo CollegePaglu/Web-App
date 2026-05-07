@@ -5,6 +5,7 @@ import Navbar from "@/app/components/layout/Navbar";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ThumbsUp, MessageCircle, UserPlus, Bell, BellOff } from "lucide-react";
 
 import { useNotificationStore } from "@/store/useNotificationStore";
 
@@ -17,11 +18,11 @@ function timeAgo(d: string) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-const NOTIF_ICONS: Record<string, string> = {
-  LIKE: "thumb_up",
-  COMMENT: "chat_bubble",
-  FOLLOW: "person_add",
-  SYSTEM: "notifications",
+const NOTIF_ICONS: Record<string, any> = {
+  LIKE: ThumbsUp,
+  COMMENT: MessageCircle,
+  FOLLOW: UserPlus,
+  SYSTEM: Bell,
 };
 
 const NOTIF_COLORS: Record<string, string> = {
@@ -83,7 +84,7 @@ export default function NotificationsPage() {
           </div>
         ) : notifications.length === 0 ? (
           <div className="text-center py-20" style={{ color: "var(--cp-muted)" }}>
-            <span className="material-symbols-outlined text-6xl block mb-3 opacity-30">notifications_none</span>
+            <BellOff size={64} className="mx-auto mb-3 opacity-30" />
             <p className="text-base font-bold">All caught up!</p>
             <p className="text-sm opacity-70">No new notifications</p>
           </div>
@@ -101,9 +102,10 @@ export default function NotificationsPage() {
                 {/* Icon */}
                 <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
                   style={{ background: (NOTIF_COLORS[n.type] || NOTIF_COLORS.SYSTEM) + "20" }}>
-                  <span className="material-symbols-outlined text-lg" style={{ color: NOTIF_COLORS[n.type] || NOTIF_COLORS.SYSTEM }}>
-                    {NOTIF_ICONS[n.type] || NOTIF_ICONS.SYSTEM}
-                  </span>
+                  {(() => {
+                    const IconComp = NOTIF_ICONS[n.type] || NOTIF_ICONS.SYSTEM;
+                    return <IconComp size={18} style={{ color: NOTIF_COLORS[n.type] || NOTIF_COLORS.SYSTEM }} />;
+                  })()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm leading-snug" style={{ color: "var(--cp-text)", fontWeight: n.isRead ? 400 : 600 }}>

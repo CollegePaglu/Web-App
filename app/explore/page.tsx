@@ -4,6 +4,7 @@ import MainLayout from "@/app/components/layout/MainLayout";
 import Navbar from "@/app/components/layout/Navbar";
 import { useFeedStore } from "@/store/useFeedStore";
 import PostCard from "@/app/components/features/feed/PostCard";
+import { Search, SearchX } from "lucide-react";
 
 export default function ExplorePage() {
   const { posts, isLoading, fetchFeed, setSearchQuery, setFilterType, setSortBy, filterType, sortBy } = useFeedStore();
@@ -39,7 +40,7 @@ export default function ExplorePage() {
           <div className="flex gap-2">
             <div className="flex-1 flex items-center gap-2 px-4 py-3 rounded-2xl"
               style={{ background: "var(--cp-surface)", border: "1px solid var(--cp-border)" }}>
-              <span className="material-symbols-outlined text-lg" style={{ color: "var(--cp-muted)" }}>search</span>
+              <Search size={18} style={{ color: "var(--cp-muted)" }} />
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -108,7 +109,7 @@ export default function ExplorePage() {
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-20" style={{ color: "var(--cp-muted)" }}>
-            <span className="material-symbols-outlined text-6xl block mb-3 opacity-30">search_off</span>
+            <SearchX size={64} className="mx-auto mb-3 opacity-30" />
             <p className="text-base font-bold">Nothing found</p>
             <p className="text-sm opacity-70">Try different keywords or filters</p>
           </div>

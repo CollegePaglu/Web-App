@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import MainLayout from "@/app/components/layout/MainLayout";
 import Navbar from "@/app/components/layout/Navbar";
 import { usersApi } from "@/lib/api";
+import { Trophy } from "lucide-react";
 
 const podiumColors = ["#FACC15", "#9CA3AF", "#C2712A"];
 
@@ -71,7 +72,7 @@ export default function LeaderboardPage() {
         )}
         {!loading && leaderboard.length === 0 && (
           <div className="text-center py-10" style={{ color: "var(--cp-muted)" }}>
-            <span className="material-symbols-outlined text-4xl mb-2">social_leaderboard</span>
+            <Trophy size={48} className="mx-auto mb-2 opacity-30" />
             <p className="text-sm">Leaderboard is empty. Be the first to earn XP!</p>
           </div>
         )}

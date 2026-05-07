@@ -6,14 +6,15 @@ import Navbar from "@/app/components/layout/Navbar";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useTheme } from "@/app/context/ThemeContext";
 import toast from "react-hot-toast";
+import { Sun, Moon, Check, LogOut } from "lucide-react";
 
 // ── Appearance Section ───────────────────────────────────────────────────────
 function AppearanceSection() {
   const { theme, toggleTheme } = useTheme();
 
   const themes = [
-    { key: "light", label: "Light", icon: "light_mode", desc: "Clean and bright" },
-    { key: "dark",  label: "Dark",  icon: "dark_mode",  desc: "Easy on the eyes" },
+    { key: "light", label: "Light", icon: Sun, desc: "Clean and bright" },
+    { key: "dark",  label: "Dark",  icon: Moon,  desc: "Easy on the eyes" },
   ];
 
   return (
@@ -30,13 +31,13 @@ function AppearanceSection() {
                 border: `2px solid ${isActive ? "var(--cp-primary)" : "transparent"}`,
                 color: isActive ? "var(--cp-primary)" : "var(--cp-muted)",
               }}>
-              <span className="material-symbols-outlined text-2xl">{t.icon}</span>
+              <t.icon size={24} />
               <span>{t.label}</span>
               <span className="text-[10px] opacity-70 font-normal">{t.desc}</span>
               {isActive && (
                 <span className="w-5 h-5 rounded-full flex items-center justify-center"
                   style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}>
-                  <span className="material-symbols-outlined text-xs">check</span>
+                  <Check size={12} strokeWidth={3} />
                 </span>
               )}
             </button>
@@ -80,7 +81,7 @@ export default function SettingsPage() {
         <button onClick={handleLogout}
           className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-sm transition-all hover:opacity-80"
           style={{ background: "#EF444415", color: "#EF4444", border: "1px solid #EF444430" }}>
-          <span className="material-symbols-outlined text-lg">logout</span>
+          <LogOut size={18} />
           Log Out
         </button>
       </div>

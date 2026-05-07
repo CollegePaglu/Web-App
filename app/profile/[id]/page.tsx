@@ -8,6 +8,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import PostCard from "@/app/components/features/feed/PostCard";
 import { Post } from "@/store/useFeedStore";
 import toast from "react-hot-toast";
+import { UserX, Edit3, UserPlus, UserCheck, GraduationCap, CalendarDays, FileText, ThumbsUp } from "lucide-react";
 
 interface UserProfile {
   _id: string;
@@ -127,7 +128,7 @@ export default function ProfilePage() {
       <MainLayout>
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center gap-4" style={{ color: "var(--cp-muted)" }}>
-          <span className="material-symbols-outlined text-6xl">person_off</span>
+          <UserX size={64} className="opacity-50" />
           <p className="text-base font-bold">User not found</p>
           <button onClick={() => router.back()}
             className="px-5 py-2 rounded-xl font-bold text-sm"
@@ -194,7 +195,7 @@ export default function ProfilePage() {
                 <button onClick={() => router.push("/settings")}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold border transition-all hover:opacity-80"
                   style={{ borderColor: "var(--cp-border)", color: "var(--cp-text)", background: "var(--cp-surface-2)" }}>
-                  <span className="material-symbols-outlined text-base">edit</span>
+                  <Edit3 size={16} />
                   Edit Profile
                 </button>
               ) : (
@@ -208,7 +209,7 @@ export default function ProfilePage() {
                     }}>
                     {followLoading
                       ? <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      : <span className="material-symbols-outlined text-base">{isFollowing ? "person_check" : "person_add"}</span>
+                      : isFollowing ? <UserCheck size={16} /> : <UserPlus size={16} />
                     }
                     {isFollowing ? "Following" : "Follow"}
                   </button>
@@ -230,18 +231,18 @@ export default function ProfilePage() {
             {/* Meta chips */}
             <div className="flex flex-wrap gap-2 mb-4">
               {profile.college && (
-                <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold"
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
                   style={{ background: "var(--cp-surface-2)", color: "var(--cp-muted)" }}>
-                  <span className="material-symbols-outlined text-sm">school</span>
+                  <GraduationCap size={14} />
                   {profile.college.name}
                   {profile.college.department && ` · ${profile.college.department}`}
                   {profile.college.year && ` · Year ${profile.college.year}`}
                 </span>
               )}
               {joinDate && (
-                <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold"
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold"
                   style={{ background: "var(--cp-surface-2)", color: "var(--cp-muted)" }}>
-                  <span className="material-symbols-outlined text-sm">calendar_month</span>
+                  <CalendarDays size={14} />
                   Joined {joinDate}
                 </span>
               )}
@@ -274,7 +275,7 @@ export default function ProfilePage() {
                 background: activeTab === tab ? "var(--cp-primary)" : "transparent",
                 color: activeTab === tab ? "#fff" : "var(--cp-muted)",
               }}>
-              <span className="material-symbols-outlined text-base">{tab === "posts" ? "article" : "thumb_up"}</span>
+              {tab === "posts" ? <FileText size={18} /> : <ThumbsUp size={18} />}
               {tab}
             </button>
           ))}
@@ -289,9 +290,11 @@ export default function ProfilePage() {
         ) : posts.length === 0 ? (
           <div className="text-center py-16 rounded-3xl"
             style={{ background: "var(--cp-surface)", border: "1px solid var(--cp-border)", color: "var(--cp-muted)" }}>
-            <span className="material-symbols-outlined text-5xl mb-3 block opacity-30">
-              {activeTab === "posts" ? "article" : "thumb_up"}
-            </span>
+            {activeTab === "posts" ? (
+              <FileText size={48} className="mx-auto mb-3 opacity-30" />
+            ) : (
+              <ThumbsUp size={48} className="mx-auto mb-3 opacity-30" />
+            )}
             <p className="text-sm font-bold">
               {activeTab === "posts" ? "No posts yet" : "No liked posts yet"}
             </p>

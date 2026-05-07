@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { storiesApi } from "@/lib/api";
+import { X } from "lucide-react";
 
 const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23374151'/%3E%3Ccircle cx='50' cy='38' r='16' fill='%239CA3AF'/%3E%3Cellipse cx='50' cy='75' rx='28' ry='18' fill='%239CA3AF'/%3E%3C/svg%3E";
 
@@ -195,7 +196,7 @@ export default function StoryViewer({ userGroup, onClose, onNextUser, onPrevUser
             onClick={(e) => { e.stopPropagation(); onClose(); }}
             className="w-10 h-10 rounded-full flex items-center justify-center bg-black/40 text-white hover:bg-black/60 backdrop-blur-md transition-colors"
           >
-            <span className="material-symbols-outlined font-black">close</span>
+            <X size={24} strokeWidth={3} />
           </button>
         </div>
 

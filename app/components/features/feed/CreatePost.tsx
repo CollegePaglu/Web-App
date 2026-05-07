@@ -5,10 +5,12 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { postsApi } from "@/lib/api";
 import toast from "react-hot-toast";
 
+import { Image as ImageIcon, Edit3, BarChart2, Eye, EyeOff, X, Paperclip } from "lucide-react";
+
 const POST_TYPES = [
-  { value: "text", label: "Text", icon: "edit_note" },
-  { value: "image", label: "Image", icon: "image" },
-  { value: "poll", label: "Poll", icon: "poll" },
+  { value: "text", label: "Text", icon: Edit3 },
+  { value: "image", label: "Image", icon: ImageIcon },
+  { value: "poll", label: "Poll", icon: BarChart2 },
 ];
 
 export default function CreatePost() {
@@ -93,7 +95,7 @@ export default function CreatePost() {
             What's happening on campus? ✨
           </div>
           <label className="p-2 rounded-full cursor-pointer transition-all hover:opacity-80" style={{ background: "var(--cp-primary-10)" }}>
-            <span className="material-symbols-outlined text-xl" style={{ color: "var(--cp-primary)" }}>image</span>
+            <ImageIcon size={20} style={{ color: "var(--cp-primary)" }} />
             <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleMediaChange} />
           </label>
         </div>
@@ -113,13 +115,13 @@ export default function CreatePost() {
                   className="flex items-center gap-1 text-[10px] font-semibold transition-colors"
                   style={{ color: isAnonymous ? "var(--cp-primary)" : "var(--cp-muted)" }}
                 >
-                  <span className="material-symbols-outlined text-xs">{isAnonymous ? "visibility_off" : "visibility"}</span>
+                  {isAnonymous ? <EyeOff size={14} /> : <Eye size={14} />}
                   {isAnonymous ? "Anonymous" : "Public"}
                 </button>
               </div>
             </div>
             <button onClick={() => setExpanded(false)} style={{ color: "var(--cp-muted)" }}>
-              <span className="material-symbols-outlined">close</span>
+              <X size={20} />
             </button>
           </div>
 
@@ -135,7 +137,7 @@ export default function CreatePost() {
                   color: type === pt.value ? "#fff" : "var(--cp-muted)",
                 }}
               >
-                <span className="material-symbols-outlined text-sm">{pt.icon}</span>
+                <pt.icon size={16} />
                 {pt.label}
               </button>
             ))}
@@ -207,7 +209,7 @@ export default function CreatePost() {
           {/* Footer */}
           <div className="flex items-center justify-between pt-1" style={{ borderTop: "1px solid var(--cp-border)" }}>
             <label className="flex items-center gap-1.5 cursor-pointer px-3 py-2 rounded-xl transition-all hover:opacity-80" style={{ background: "var(--cp-surface-2)" }}>
-              <span className="material-symbols-outlined text-lg" style={{ color: "var(--cp-primary)" }}>attach_file</span>
+              <Paperclip size={18} style={{ color: "var(--cp-primary)" }} />
               <span className="text-xs font-semibold" style={{ color: "var(--cp-muted)" }}>Media</span>
               <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleMediaChange} />
             </label>

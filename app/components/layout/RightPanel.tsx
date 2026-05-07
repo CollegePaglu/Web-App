@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { useFeedStore } from "@/store/useFeedStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import Link from "next/link";
+import { Flame, Calendar } from "lucide-react";
 import { postsApi, eventsApi } from "@/lib/api";
 
 export default function RightPanel() {
@@ -191,9 +192,7 @@ export default function RightPanel() {
           >
             Trending
           </h4>
-          <span className="material-symbols-outlined text-base" style={{ color: "var(--cp-muted)" }}>
-            local_fire_department
-          </span>
+          <Flame size={18} style={{ color: "var(--cp-muted)" }} />
         </div>
         <div className="flex flex-col gap-0.5">
           {displayTags.map(({ tag, posts: count }, i) => (
@@ -227,9 +226,7 @@ export default function RightPanel() {
           >
             Events
           </h4>
-          <span className="material-symbols-outlined text-base" style={{ color: "var(--cp-muted)" }}>
-            calendar_today
-          </span>
+          <Calendar size={18} style={{ color: "var(--cp-muted)" }} />
         </div>
         <div className="flex flex-col gap-2">
           {events.length === 0 ? (

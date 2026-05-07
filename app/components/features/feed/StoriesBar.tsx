@@ -6,6 +6,7 @@ const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 import { storiesApi } from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
 import StoryViewer from "./StoryViewer";
+import { Plus, X, Download } from "lucide-react";
 
 interface Story {
   _id: string;
@@ -115,7 +116,7 @@ export default function StoriesBar() {
                 />
               </div>
               <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-blue-500 border-2 border-white dark:border-black flex items-center justify-center text-white">
-                <span className="material-symbols-outlined text-[16px] font-bold">add</span>
+                <Plus size={16} strokeWidth={3} />
               </div>
             </div>
             <span className="text-[11px] font-medium truncate w-16 text-center" style={{ color: "var(--cp-muted)" }}>
@@ -185,7 +186,7 @@ export default function StoriesBar() {
               className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center z-10 transition-colors"
               style={{ background: "var(--cp-surface-2)", color: "var(--cp-muted)" }}
             >
-              <span className="material-symbols-outlined text-xl">close</span>
+              <X size={20} />
             </button>
 
             {/* Gradient header */}
@@ -210,7 +211,7 @@ export default function StoriesBar() {
                 className="inline-flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-base font-bold transition-all hover:scale-[1.02] active:scale-95"
                 style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}
               >
-                <span className="material-symbols-outlined text-xl">download</span>
+                <Download size={20} />
                 Download the App
               </a>
 
