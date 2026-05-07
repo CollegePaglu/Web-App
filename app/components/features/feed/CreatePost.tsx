@@ -70,8 +70,9 @@ export default function CreatePost() {
       setContent(""); setTitle(""); setType("text");
       setIsAnonymous(false); setMediaFiles([]); setMediaPreviews([]);
       setPollOptions(["", ""]); setExpanded(false);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to post");
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error?.response?.data?.message || "Failed to post");
     } finally {
       setIsSubmitting(false);
     }

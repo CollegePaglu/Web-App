@@ -57,7 +57,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
         {/* Speed-dial sub-buttons (shown when open) */}
         {fabOpen && (
-          <div className="fixed bottom-24 right-6 lg:bottom-28 lg:right-10 flex flex-col gap-3 items-end z-40">
+          <div className="fixed bottom-40 right-6 lg:bottom-28 lg:right-10 flex flex-col gap-3 items-end z-40">
             {SPEED_DIAL.map((item, i) => (
               <button
                 key={item.category}

@@ -55,7 +55,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!user) router.push("/login");
-  }, [user]);
+  }, [user, router]);
 
   if (!user) return null;
 

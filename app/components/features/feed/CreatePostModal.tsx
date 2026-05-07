@@ -100,8 +100,9 @@ export default function CreatePostModal({ onClose, initialCategory = "GENERAL" }
       
       toast.success(`Posted to ${meta.label}! 🔥`);
       onClose();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to post");
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error?.response?.data?.message || "Failed to post");
     } finally {
       clearInterval(progressTimer);
       setIsSubmitting(false);

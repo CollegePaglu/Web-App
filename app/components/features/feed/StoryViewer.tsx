@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { storiesApi } from "@/lib/api";
 import { X } from "lucide-react";
 
@@ -57,15 +57,35 @@ export default function StoryViewer({ userGroup, onClose, onNextUser, onPrevUser
   
   const currentStoryRaw = userGroup.stories[currentIndex];
   
-  // Backend sometimes marks videos as images. Auto-detect from URL extension.
-  const isVideoUrl = currentStoryRaw?.mediaUrl?.match(/\.(mp4|mov|webm|mkv)(?:\?.*)?$/i) || currentStoryRaw?.mediaUrl?.includes('/videos/');
-  const currentStory = currentStoryRaw ? {
-    ...currentStoryRaw,
-    type: isVideoUrl ? "video" : currentStoryRaw.type
-  } : undefined;
+  const currentStory = useMemo(() => {
+    // Backend sometimes marks videos as images. Auto-detect from URL extension.
+    const isVideoUrl = currentStoryRaw?.mediaUrl?.match(/\.(mp4|mov|webm|mkv)(?:\?.*)?$/i) || currentStoryRaw?.mediaUrl?.includes('/videos/');
+    return currentStoryRaw ? {
+      ...currentStoryRaw,
+      type: isVideoUrl ? "video" : currentStoryRaw.type
+    } : undefined;
+  }, [currentStoryRaw]);
 
   // Default to 5 seconds for images/text, or actual duration for videos
   const duration = currentStory?.duration ? currentStory.duration * 1000 : 5000;
+
+  const handleNext = useCallback(() => {
+    setProgress(0);
+    if (currentIndex < userGroup.stories.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+    } else {
+      onNextUser();
+    }
+  }, [currentIndex, userGroup.stories.length, onNextUser]);
+
+  const handlePrev = useCallback(() => {
+    setProgress(0);
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+    } else {
+      onPrevUser();
+    }
+  }, [currentIndex, onPrevUser]);
 
   // Preload next image
   useEffect(() => {
@@ -91,7 +111,7 @@ export default function StoryViewer({ userGroup, onClose, onNextUser, onPrevUser
   useEffect(() => {
     if (isPaused || !currentStory) return;
 
-    let start = performance.now();
+    const start = performance.now();
     let animationFrameId: number;
 
     const animate = (time: number) => {
@@ -122,25 +142,7 @@ export default function StoryViewer({ userGroup, onClose, onNextUser, onPrevUser
     animationFrameId = requestAnimationFrame(animate);
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [currentIndex, isPaused, currentStory, duration]);
-
-  const handleNext = () => {
-    setProgress(0);
-    if (currentIndex < userGroup.stories.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
-      onNextUser();
-    }
-  };
-
-  const handlePrev = () => {
-    setProgress(0);
-    if (currentIndex > 0) {
-      setCurrentIndex((prev) => prev - 1);
-    } else {
-      onPrevUser();
-    }
-  };
+  }, [currentIndex, isPaused, currentStory, duration, handleNext]);
 
   const handleClick = (e: React.MouseEvent) => {
     const { clientX } = e;

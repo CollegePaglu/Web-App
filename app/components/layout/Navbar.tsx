@@ -30,7 +30,8 @@ export default function Navbar() {
   const { unreadCount, fetchUnreadCount } = useNotificationStore();
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Poll for notifications every 30 seconds if authenticated

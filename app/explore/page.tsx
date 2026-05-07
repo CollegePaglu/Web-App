@@ -7,12 +7,12 @@ import PostCard from "@/app/components/features/feed/PostCard";
 import { Search, SearchX } from "lucide-react";
 
 export default function ExplorePage() {
-  const { posts, isLoading, fetchFeed, setSearchQuery, setFilterType, setSortBy, filterType, sortBy } = useFeedStore();
+  const { posts, isLoading, setSearchQuery, setFilterType, setSortBy, filterType, sortBy } = useFeedStore();
   const [input, setInput] = useState("");
 
   useEffect(() => {
     setSortBy("trending");
-  }, []);
+  }, [setSortBy]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

@@ -47,8 +47,11 @@ export default function RightPanel() {
   };
 
   useEffect(() => {
-    fetchTrendingTags();
-    fetchEvents();
+    const timer = setTimeout(() => {
+      fetchTrendingTags();
+      fetchEvents();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const displayTags = trendingTags.length > 0

@@ -32,8 +32,9 @@ export default function LoginPage() {
       await sendOtp(normalisePhone(phone));
       toast.success("OTP sent to your WhatsApp 📲");
       setStep("otp");
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to send OTP");
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error?.response?.data?.message || "Failed to send OTP");
     }
   };
 
@@ -44,9 +45,10 @@ export default function LoginPage() {
       const { needsProfile } = await verifyOtp(normalisePhone(phone), otp);
       toast.success("Welcome to College Paglu! 🎉");
       router.push(needsProfile ? "/complete-profile" : "/");
-    } catch (err: any) {
-      console.error("OTP verification error:", err);
-      toast.error(err?.response?.data?.message || err.message || "Invalid OTP. Try again");
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } }, message?: string };
+      console.error("OTP verification error:", error);
+      toast.error(error?.response?.data?.message || error.message || "Invalid OTP. Try again");
     }
   };
 
@@ -165,7 +167,7 @@ export default function LoginPage() {
                   />
                 </div>
                 <p className="text-[10px] mt-1.5" style={{ color: "var(--cp-muted)" }}>
-                  You'll receive a 6-digit OTP on WhatsApp
+                  You&apos;ll receive a 6-digit OTP on WhatsApp
                 </p>
               </div>
 
@@ -186,7 +188,7 @@ export default function LoginPage() {
               </button>
 
               <p className="text-center text-[10px]" style={{ color: "var(--cp-muted)" }}>
-                New here? Same link — we'll create your account automatically.
+                New here? Same link — we&apos;ll create your account automatically.
               </p>
             </form>
           ) : (
@@ -247,7 +249,7 @@ export default function LoginPage() {
                 className="text-xs text-center transition-colors hover:opacity-80"
                 style={{ color: "var(--cp-primary)" }}
               >
-                Didn't get it? Resend OTP
+                Didn&apos;t get it? Resend OTP
               </button>
             </form>
           )}

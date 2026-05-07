@@ -104,8 +104,9 @@ export default function ProfilePage() {
         setIsFollowing(true);
         setFollowersCount((n) => n + 1);
       }
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Action failed");
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error?.response?.data?.message || "Action failed");
     } finally {
       setFollowLoading(false);
     }

@@ -25,7 +25,7 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
   const [page, setPage] = useState(1);
 
   /** Seed for recommendation engine freshness — bumped on every refresh */
-  const seedRef = useRef(Date.now());
+  const seedRef = useRef<number>(0);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadingIndicatorRef = useRef<HTMLDivElement>(null);
@@ -89,7 +89,6 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
   }, [category, authorType, isUpdates, isConfessions]);
 
   // ── Initial load + refresh when category changes ─────────────────────────
-  // eslint-disable-next-line react-compiler/react-compiler
   useEffect(() => {
     setIsLoading(true);
     setPosts([]);

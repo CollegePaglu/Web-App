@@ -89,8 +89,9 @@ export default function CommentsPanel({ postId, onClose, updateCommentCount }: P
       updateCommentCount?.(1);
       setContent("");
       toast.success("Comment added!");
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Failed to add comment");
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error?.response?.data?.message || "Failed to add comment");
     } finally {
       setSubmitting(false);
     }

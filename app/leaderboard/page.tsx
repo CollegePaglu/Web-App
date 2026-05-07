@@ -8,7 +8,17 @@ import { Trophy } from "lucide-react";
 const podiumColors = ["#FACC15", "#9CA3AF", "#C2712A"];
 
 export default function LeaderboardPage() {
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<Array<{
+    _id?: string;
+    username?: string;
+    name: string;
+    avatar: string;
+    badge: string;
+    xp: number;
+    rank?: number;
+    college?: string;
+    streak?: number;
+  }>>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

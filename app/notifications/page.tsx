@@ -1,11 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import MainLayout from "@/app/components/layout/MainLayout";
 import Navbar from "@/app/components/layout/Navbar";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ThumbsUp, MessageCircle, UserPlus, Bell, BellOff } from "lucide-react";
+import { ThumbsUp, MessageCircle, UserPlus, Bell, BellOff, LucideIcon } from "lucide-react";
 
 import { useNotificationStore } from "@/store/useNotificationStore";
 
@@ -18,7 +17,7 @@ function timeAgo(d: string) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-const NOTIF_ICONS: Record<string, any> = {
+const NOTIF_ICONS: Record<string, LucideIcon> = {
   LIKE: ThumbsUp,
   COMMENT: MessageCircle,
   FOLLOW: UserPlus,
@@ -48,7 +47,7 @@ export default function NotificationsPage() {
   useEffect(() => {
     if (!isAuthenticated) { router.push("/login"); return; }
     fetchNotifications(true);
-  }, [isAuthenticated, fetchNotifications]);
+  }, [isAuthenticated, fetchNotifications, router]);
 
   return (
     <MainLayout>
