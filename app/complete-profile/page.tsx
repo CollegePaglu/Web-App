@@ -53,7 +53,7 @@ export default function CompleteProfilePage() {
     firstName: "",
     lastName: "",
     username: "",
-    collegeId: "",
+    collegeName: "",
     year: "",
     branch: "",
     rollNumber: "",
@@ -80,24 +80,20 @@ export default function CompleteProfilePage() {
       toast.error("Username is required");
       return;
     }
-    if (!form.collegeId) {
-      toast.error("Please select your college");
+    if (!form.collegeName.trim()) {
+      toast.error("Please enter your college name");
       return;
     }
 
     setIsLoading(true);
     try {
-      // Find college name from selected ID
-      const selectedCollege = colleges.find((c) => c._id === form.collegeId);
-      const collegeName = selectedCollege?.name || "";
-
       // 1. Complete profile (firstName, lastName, college details)
       await usersApi.completeProfile({
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
-        ...(collegeName && {
+        ...(form.collegeName.trim() && {
           college: {
-            name: collegeName,
+            name: form.collegeName.trim(),
             department: form.branch.trim() || "General",
             year: form.year ? parseInt(form.year) : 1,
             ...(form.rollNumber && { rollNumber: form.rollNumber.trim() }),
@@ -166,13 +162,13 @@ export default function CompleteProfilePage() {
               label="First Name *"
               value={form.firstName}
               onChange={(v) => handle("firstName", v)}
-              placeholder="Shubham"
+              placeholder="e.g. Ram"
             />
             <FormInput
               label="Last Name *"
               value={form.lastName}
               onChange={(v) => handle("lastName", v)}
-              placeholder="Raj"
+              placeholder="e.g. Prakash"
             />
           </div>
 
@@ -180,10 +176,10 @@ export default function CompleteProfilePage() {
             label="Username *"
             value={form.username}
             onChange={(v) => handle("username", v)}
-            placeholder="@shubham556"
+            placeholder="e.g. @ramprakash"
           />
 
-          {/* College dropdown */}
+          {/* College input with suggestions */}
           <div>
             <label
               className="text-xs font-bold uppercase tracking-widest mb-1 block"
@@ -191,23 +187,23 @@ export default function CompleteProfilePage() {
             >
               College *
             </label>
-            <select
-              value={form.collegeId}
-              onChange={(e) => handle("collegeId", e.target.value)}
+            <input
+              list="college-list"
+              value={form.collegeName}
+              onChange={(e) => handle("collegeName", e.target.value)}
+              placeholder="e.g. IIT Bombay"
               className="w-full px-4 py-3 rounded-xl text-sm outline-none"
               style={{
                 background: "var(--cp-surface-2)",
                 border: "1px solid var(--cp-border)",
                 color: "var(--cp-text)",
               }}
-            >
-              <option value="">— Select college —</option>
+            />
+            <datalist id="college-list">
               {colleges.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.name}
-                </option>
+                <option key={c._id} value={c.name} />
               ))}
-            </select>
+            </datalist>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
