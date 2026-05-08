@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   title: "College Paglu — Campus Community",
   description: "Your campus, your vibe. Memes, confessions, societies & more.",
   keywords: ["college", "campus", "community", "students", "memes", "confessions"],
+  icons: {
+    icon: "/BrandAssets/CollegePagluSVG.svg",
+    shortcut: "/BrandAssets/CollegePagluSVG.svg",
+    apple: "/BrandAssets/CollegePagluSVG.svg",
+  },
   openGraph: {
     title: "College Paglu",
     description: "Your campus, your vibe.",

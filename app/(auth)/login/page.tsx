@@ -66,7 +66,13 @@ export default function LoginPage() {
         {/* Brand */}
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white text-lg font-black">CP</div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/BrandAssets/CollegePagluSVG.svg"
+              alt="College Paglu"
+              className="h-10 w-10 object-contain"
+              style={{ filter: "invert(1)" }}
+            />
             <span className="text-white font-extrabold text-xl">College Paglu</span>
           </div>
         </div>
@@ -124,7 +130,13 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           {/* Mobile brand */}
           <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black" style={{ background: "var(--cp-primary)", color: "var(--cp-primary-text)" }}>CP</div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/BrandAssets/CollegePagluSVG.svg"
+              alt="College Paglu"
+              className="h-10 w-10 object-contain"
+              style={{ filter: theme === "dark" ? "invert(1)" : "none" }}
+            />
             <span className="font-extrabold text-lg" style={{ color: "var(--cp-text)" }}>College Paglu</span>
           </div>
 
