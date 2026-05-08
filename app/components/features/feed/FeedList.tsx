@@ -23,6 +23,12 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
+  const [isEndlessExhausted, setIsEndlessExhausted] = useState(false);
+
+  const postsRef = useRef<Post[]>([]);
+  useEffect(() => {
+    postsRef.current = posts;
+  }, [posts]);
 
   /** Seed for recommendation engine freshness — bumped on every refresh */
   const seedRef = useRef<number>(0);
@@ -31,7 +37,7 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
   const loadingIndicatorRef = useRef<HTMLDivElement>(null);
 
   // ── Fetch a single page of posts ────────────────────────────────────────
-  const fetchPage = useCallback(async (pageNum: number, reset: boolean, seed?: number) => {
+  const fetchPage = useCallback(async (pageNum: number, reset: boolean, seed?: number): Promise<number> => {
     try {
       let data;
       if (isUpdates) {
@@ -72,10 +78,25 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
         
         setPosts(demos);
         setHasMore(false);
+        return 0;
       } else {
-        setPosts((prev) => (reset ? incoming : [...prev, ...incoming]));
+        let addedCount = 0;
+        if (!reset) {
+          const existingIds = new Set(postsRef.current.map((p) => p._id));
+          addedCount = incoming.filter((p) => !existingIds.has(p._id)).length;
+        } else {
+          addedCount = incoming.length;
+        }
+
+        setPosts((prev) => {
+          if (reset) return incoming;
+          const existingIds = new Set(prev.map((p) => p._id));
+          const fresh = incoming.filter((p) => !existingIds.has(p._id));
+          return [...prev, ...fresh];
+        });
         setHasMore(pagination?.hasNext ?? false);
         setPage(pageNum);
+        return addedCount;
       }
     } catch {
       if (reset) {
@@ -84,7 +105,9 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
         if (authorType) demos = [];
         setPosts(demos);
         setHasMore(false);
+        return 0;
       }
+      return 0;
     }
   }, [category, authorType, isUpdates, isConfessions]);
 
@@ -93,6 +116,7 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
     setIsLoading(true);
     setPosts([]);
     setPage(1);
+    setIsEndlessExhausted(false);
     // Generate a fresh seed for the initial load
     seedRef.current = Date.now();
     fetchPage(1, true, seedRef.current).then(() => {
@@ -177,6 +201,7 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
       setIsLoading(true);
       setPosts([]);
       setPage(1);
+      setIsEndlessExhausted(false);
       fetchPage(1, true, seedRef.current).finally(() => setIsLoading(false));
     };
     window.addEventListener("feed-refresh", handler);
@@ -185,21 +210,36 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
 
   // ── Infinite scroll ───────────────────────────────────────────────────
   const loadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return;
+    if (isLoadingMore) return;
     setIsLoadingMore(true);
-    await fetchPage(page + 1, false);
+
+    if (hasMore) {
+      await fetchPage(page + 1, false);
+    } else if (!isUpdates && !isConfessions && !isEndlessExhausted && postsRef.current.length >= LIMIT) {
+      // Endless scroll: bump seed and fetch page 1 to get recommended fresh posts
+      seedRef.current = Date.now();
+      const added = await fetchPage(1, false, seedRef.current);
+      if (added === 0) {
+        setIsEndlessExhausted(true); // Stop trying if we find no new unique posts
+      }
+    }
+    
     setIsLoadingMore(false);
-  }, [isLoadingMore, hasMore, page, fetchPage]);
+  }, [isLoadingMore, hasMore, page, fetchPage, isUpdates, isConfessions, isEndlessExhausted]);
 
   useEffect(() => {
     if (isLoading) return;
     if (observerRef.current) observerRef.current.disconnect();
     observerRef.current = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && hasMore) loadMore();
+      if (entries[0].isIntersecting) {
+        if (hasMore || (!isUpdates && !isConfessions && !isEndlessExhausted && postsRef.current.length >= LIMIT)) {
+          loadMore();
+        }
+      }
     });
     if (loadingIndicatorRef.current) observerRef.current.observe(loadingIndicatorRef.current);
     return () => { if (observerRef.current) observerRef.current.disconnect(); };
-  }, [isLoading, hasMore, loadMore]);
+  }, [isLoading, hasMore, loadMore, isUpdates, isConfessions, isEndlessExhausted]);
 
   // ── Skeleton loader ───────────────────────────────────────────────────
   if (isLoading && posts.length === 0) {
@@ -292,11 +332,7 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
             Loading more…
           </div>
         )}
-        {!hasMore && posts.length > 0 && (
-          <p className="text-xs font-bold text-center" style={{ color: "var(--cp-muted)" }}>
-            You&apos;ve reached the end! 🎉
-          </p>
-        )}
+        {/* End of feed - intentionally left blank for better UX on shorter feeds */}
       </div>
     </div>
   );
