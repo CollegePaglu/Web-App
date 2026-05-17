@@ -14,6 +14,7 @@ import {
   Lock,
   Smile,
   Trophy,
+  BookOpen,
   Bell,
   Settings,
   LogIn,
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { label: "Gossips",     icon: MessageCircle, href: "/gossips" },
   { label: "Confessions", icon: Lock,          href: "/confessions" },
   { label: "Memes",       icon: Smile,         href: "/memes" },
+  { label: "Notes",       icon: BookOpen,      href: "/notes", highlight: true },
   { label: "Leaderboard", icon: Trophy,        href: "/leaderboard" },
 ];
 
@@ -48,7 +50,7 @@ export default function SideBar() {
   const avatar = user?.avatar;
   const initial = displayName[0]?.toUpperCase();
 
-  const NavLink = ({ href, icon: Icon, label, exact = false, badge = 0 }: { href: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number; fill?: string; className?: string }>; label: string; exact?: boolean; badge?: number }) => {
+  const NavLink = ({ href, icon: Icon, label, exact = false, badge = 0, highlight = false }: { href: string; icon: React.ComponentType<{ size?: number; strokeWidth?: number; fill?: string; className?: string }>; label: string; exact?: boolean; badge?: number; highlight?: boolean }) => {
     const isActive = exact ? pathname === href : pathname === href || (href !== "/" && pathname.startsWith(href));
     
     const handleClick = (e: React.MouseEvent) => {
@@ -65,16 +67,18 @@ export default function SideBar() {
       <Link
         href={href}
         onClick={handleClick}
-        className="flex items-center gap-3 py-2.5 px-4 rounded-2xl text-sm font-semibold transition-all duration-200 group relative"
+        className={`flex items-center gap-3 py-2.5 px-4 rounded-2xl text-sm font-semibold transition-all duration-200 group relative ${
+          highlight ? `nav-notes-highlight${isActive ? " nav-notes-highlight--active" : ""}` : ""
+        }`}
         style={{
-          background: isActive ? "var(--cp-primary-10)" : "transparent",
-          color: isActive ? "var(--cp-primary)" : "var(--cp-muted)",
+          background: highlight ? undefined : isActive ? "var(--cp-primary-10)" : "transparent",
+          color: isActive ? "var(--cp-primary)" : highlight ? "var(--cp-text)" : "var(--cp-muted)",
         }}
       >
-        <div className="relative">
+        <div className="relative shrink-0">
           <Icon
-            size={20}
-            strokeWidth={isActive ? 2.5 : 1.8}
+            size={highlight ? 24 : 20}
+            strokeWidth={isActive || highlight ? 2.5 : 1.8}
             fill={isActive ? "currentColor" : "none"}
           />
           {badge > 0 && (
@@ -84,8 +88,11 @@ export default function SideBar() {
             />
           )}
         </div>
-        <span>{label}</span>
-        {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: "var(--cp-primary)" }} />}
+        <span className={highlight ? "font-bold" : ""}>{label}</span>
+        {highlight && <span className="ml-auto nav-notes-badge">NEW</span>}
+        {isActive && !highlight && (
+          <div className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: "var(--cp-primary)" }} />
+        )}
       </Link>
     );
   };

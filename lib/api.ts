@@ -101,7 +101,8 @@ function fixMediaUrls(obj: any): any {
         key === "profilePicture" ||
         key === "videoUrl" ||
         key === "thumbnailUrl" ||
-        key === "url"
+        key === "url" ||
+        key === "fileUrl"
       ) {
         result[key] = resolvePublicMediaUrl(value);
       } else {
@@ -306,6 +307,56 @@ export const collegesApi = {
 export const eventsApi = {
   getEvents: (params?: { page?: number; limit?: number }) =>
     api.get("/community/events", { params }),
+};
+
+// ── Notes ─────────────────────────────────────────────────────────────────────
+export interface Note {
+  _id: string;
+  title: string;
+  description?: string;
+  subject: string;
+  semester: number;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+  uploadedBy: {
+    _id: string;
+    name: string;
+    avatar?: string;
+  };
+  collegeId: string;
+  downloadCount: number;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const notesApi = {
+  getNotes: (params?: {
+    semester?: number;
+    subject?: string;
+    page?: number;
+    limit?: number;
+  }) => api.get("/notes", { params }),
+
+  getNoteById: (id: string) => api.get(`/notes/${id}`),
+
+  uploadNote: (data: any) => api.post("/notes", data),
+
+  trackDownload: (id: string) => api.post(`/notes/${id}/download`),
+
+  uploadFile: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", "notes");
+    formData.append("context", "note");
+
+    return api.post("/attachments/upload/single", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  },
 };
 
 export default api;

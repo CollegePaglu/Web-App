@@ -12,6 +12,7 @@ import {
   Lock,
   Smile,
   Trophy,
+  BookOpen,
   Bell,
   Settings,
   LogIn,
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { label: "Gossips",     icon: MessageCircle, href: "/gossips" },
   { label: "Confessions", icon: Lock,          href: "/confessions" },
   { label: "Memes",       icon: Smile,         href: "/memes" },
+  { label: "Notes",       icon: BookOpen,      href: "/notes", highlight: true },
   { label: "Leaderboard", icon: Trophy,        href: "/leaderboard" },
 ];
 
@@ -158,28 +160,30 @@ export default function MobileDrawer({ open, onClose }: Props) {
                   : pathname === item.href || pathname.startsWith(item.href + "/");
               const Icon = item.icon;
 
+              const highlight = "highlight" in item && item.highlight;
+
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={onClose}
-                  className="flex items-center gap-3 py-2.5 px-4 rounded-2xl text-sm font-semibold transition-all duration-200"
+                  className={`flex items-center gap-3 py-2.5 px-4 rounded-2xl text-sm font-semibold transition-all duration-200 ${
+                    highlight ? `nav-notes-highlight${isActive ? " nav-notes-highlight--active" : ""}` : ""
+                  }`}
                   style={{
-                    background: isActive ? "var(--cp-primary-10)" : "transparent",
-                    color: isActive ? "var(--cp-primary)" : "var(--cp-muted)",
+                    background: highlight ? undefined : isActive ? "var(--cp-primary-10)" : "transparent",
+                    color: isActive ? "var(--cp-primary)" : highlight ? "var(--cp-text)" : "var(--cp-muted)",
                   }}
                 >
                   <Icon
-                    size={20}
-                    strokeWidth={isActive ? 2.5 : 1.8}
+                    size={highlight ? 24 : 20}
+                    strokeWidth={isActive || highlight ? 2.5 : 1.8}
                     fill={isActive ? "currentColor" : "none"}
                   />
-                  <span>{item.label}</span>
-                  {isActive && (
-                    <div
-                      className="ml-auto w-1.5 h-1.5 rounded-full"
-                      style={{ background: "var(--cp-primary)" }}
-                    />
+                  <span className={highlight ? "font-bold" : ""}>{item.label}</span>
+                  {highlight && <span className="ml-auto nav-notes-badge">NEW</span>}
+                  {isActive && !highlight && (
+                    <div className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: "var(--cp-primary)" }} />
                   )}
                 </Link>
               );
