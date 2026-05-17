@@ -204,3 +204,26 @@ html { scroll-behavior: smooth; }
     0 0 36px var(--cp-notes-glow-outer),
     inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
+
+.nav-notes-promo {
+  margin-bottom: 0.25rem;
+}
+
+/* Mobile bottom nav — featured Notes tab */
+.nav-notes-bottom {
+  flex: 1.2 !important;
+  margin: -4px 2px 2px;
+  padding: 6px 2px 4px !important;
+  border-radius: 14px !important;
+  border: 1px solid var(--cp-notes-border) !important;
+  box-shadow: 0 0 12px var(--cp-notes-glow-soft) !important;
+  background: var(--cp-surface-2) !important;
+}
+
+.nav-notes-bottom--active {
+  border-color: var(--cp-notes-border-active) !important;
+  box-shadow:
+    0 0 0 1px var(--cp-notes-border-active),
+    0 0 16px var(--cp-notes-glow),
+    0 0 28px var(--cp-notes-glow-outer) !important;
+}

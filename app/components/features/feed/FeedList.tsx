@@ -5,6 +5,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { postsApi } from "@/lib/api";
 import { Post, DEMO_POSTS } from "@/store/useFeedStore";
 import StoriesBar from "./StoriesBar";
+import NotesPromoBanner from "@/app/components/NotesPromoBanner";
 import { ArrowRight } from "lucide-react";
 
 interface Props {
@@ -268,7 +269,10 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
     <div className="flex flex-col gap-4 pb-20 w-full max-w-[600px] mx-auto px-4 lg:px-0">
       {/* Stories Bar (Only on Home Feed) */}
       {!category && !isUpdates && !isConfessions && !authorType && (
-        <StoriesBar />
+        <>
+          <NotesPromoBanner />
+          <StoriesBar />
+        </>
       )}
 
       {/* CreatePost inline prompt */}
@@ -288,8 +292,7 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
             ✏️
           </div>
           <span className="text-base font-bold flex-1" style={{ color: "var(--cp-text)" }}>
-            {category === "GOSSIPS"     ? "Drop some gossip… ☕"
-            : category === "CONFESSION" ? "Confess anonymously… 🤫"
+            {category === "CONFESSION" ? "Confess anonymously… 🤫"
             : category === "MEMES"       ? "Share a meme 😂"
             : "What's happening on campus? ✨"}
           </span>
@@ -302,7 +305,7 @@ export default function FeedList({ category, authorType, isUpdates, isConfession
       {posts.length === 0 && !isLoading ? (
         <div className="p-12 text-center rounded-3xl mt-8" style={{ background: "var(--cp-surface)", border: "1px solid var(--cp-border)" }}>
           <div className="text-5xl mb-4">
-            {category === "GOSSIPS" ? "🗣️" : category === "CONFESSION" ? "🤫" : category === "MEMES" ? "😂" : "📭"}
+            {category === "CONFESSION" ? "🤫" : category === "MEMES" ? "😂" : "📭"}
           </div>
           <h3 className="font-bold text-lg mb-2" style={{ color: "var(--cp-text)" }}>Nothing here… yet!</h3>
           <p className="text-sm" style={{ color: "var(--cp-muted)" }}>

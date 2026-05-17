@@ -5,11 +5,10 @@ import { postsApi } from "@/lib/api";
 import toast from "react-hot-toast";
 import { Eye, EyeOff, X, ImagePlus } from "lucide-react";
 
-type Category = "GOSSIPS" | "CONFESSION" | "MEMES" | "GENERAL";
+type Category = "CONFESSION" | "MEMES" | "GENERAL";
 
 const CATEGORY_META: Record<Category, { label: string; emoji: string; color: string; placeholder: string }> = {
   GENERAL:     { label: "General",     emoji: "📝", color: "#3B82F6", placeholder: "What's on your mind? 💭" },
-  GOSSIPS:     { label: "Gossips",     emoji: "🗣️", color: "#8B5CF6", placeholder: "Share the campus gossip… ☕" },
   CONFESSION:  { label: "Confessions", emoji: "🤫", color: "#EC4899", placeholder: "Confess anonymously… 🎭 No one will know it's you." },
   MEMES:       { label: "Memes",       emoji: "😂", color: "#F59E0B", placeholder: "Drop a meme or a funny take 😂" },
 };

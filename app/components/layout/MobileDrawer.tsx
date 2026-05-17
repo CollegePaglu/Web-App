@@ -8,7 +8,6 @@ import { useNotificationStore } from "@/store/useNotificationStore";
 import {
   Home,
   Megaphone,
-  MessageCircle,
   Lock,
   Smile,
   Trophy,
@@ -27,7 +26,6 @@ import { useRouter } from "next/navigation";
 const NAV_ITEMS = [
   { label: "Home",        icon: Home,          href: "/" },
   { label: "Updates",     icon: Megaphone,     href: "/updates" },
-  { label: "Gossips",     icon: MessageCircle, href: "/gossips" },
   { label: "Confessions", icon: Lock,          href: "/confessions" },
   { label: "Memes",       icon: Smile,         href: "/memes" },
   { label: "Notes",       icon: BookOpen,      href: "/notes", highlight: true },

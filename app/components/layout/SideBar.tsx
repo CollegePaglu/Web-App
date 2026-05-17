@@ -10,7 +10,6 @@ import CreatePostModal from "../features/feed/CreatePostModal";
 import {
   Home,
   Megaphone,
-  MessageCircle,
   Lock,
   Smile,
   Trophy,
@@ -25,7 +24,6 @@ import {
 const NAV_ITEMS = [
   { label: "Home",        icon: Home,          href: "/" },
   { label: "Updates",     icon: Megaphone,     href: "/updates" },
-  { label: "Gossips",     icon: MessageCircle, href: "/gossips" },
   { label: "Confessions", icon: Lock,          href: "/confessions" },
   { label: "Memes",       icon: Smile,         href: "/memes" },
   { label: "Notes",       icon: BookOpen,      href: "/notes", highlight: true },

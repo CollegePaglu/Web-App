@@ -7,11 +7,10 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
 import { Edit3 } from "lucide-react";
 
-type Category = "GOSSIPS" | "CONFESSION" | "MEMES" | "GENERAL";
+type Category = "CONFESSION" | "MEMES" | "GENERAL";
 
 const SPEED_DIAL = [
   { category: "GENERAL"    as Category, emoji: "📝", label: "Post",        color: "#3B82F6" },
-  { category: "GOSSIPS"    as Category, emoji: "🗣️", label: "Gossips",     color: "#8B5CF6" },
   { category: "CONFESSION" as Category, emoji: "🤫", label: "Confessions", color: "#EC4899" },
   { category: "MEMES"      as Category, emoji: "😂", label: "Memes",       color: "#F59E0B" },
 ];
