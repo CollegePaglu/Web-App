@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
+import { pingUserActivity } from "@/lib/activity";
 
 /**
  * Runs on mount to hydrate the user session from localStorage token.
@@ -12,7 +13,9 @@ export default function AuthBootstrap() {
   useEffect(() => {
     const token = accessToken || localStorage.getItem("cp_access_token");
     if (token && !isAuthenticated) {
-      fetchMe();
+      fetchMe().then(() => pingUserActivity());
+    } else if (isAuthenticated) {
+      pingUserActivity();
     } else if (!token) {
       // Emergency purge of lingering cookies that might cause Next.js middleware infinite redirect loops
       if (typeof document !== "undefined" && document.cookie.includes("cp_access_token")) {

@@ -2,6 +2,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { authApi, usersApi, tokenStorage } from "@/lib/api";
+import { pingUserActivity } from "@/lib/activity";
 
 export interface User {
   _id: string;
@@ -78,6 +79,7 @@ export const useAuthStore = create<AuthState>()(
             user,
             isAuthenticated: true,
           });
+          pingUserActivity();
           return { needsProfile: isNewUser || !user?.isProfileComplete };
         } finally {
           set({ isLoading: false });
@@ -98,6 +100,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const { data } = await usersApi.getMe();
           set({ user: data.data, isAuthenticated: true });
+          pingUserActivity();
         } catch {
           set({ user: null, isAuthenticated: false, accessToken: null, refreshToken: null });
           tokenStorage.clear();

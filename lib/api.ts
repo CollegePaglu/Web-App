@@ -220,6 +220,9 @@ export const usersApi = {
 
   getStatus: () => api.get("/users/me/status"),
 
+  recordActivity: (data: { platform: "web" | "ios" | "android"; deviceId?: string }) =>
+    api.post("/users/me/activity", data),
+
   getLeaderboard: (limit = 20) =>
     api.get("/users/leaderboard", { params: { limit } }),
 };
